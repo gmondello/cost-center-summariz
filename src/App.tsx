@@ -315,12 +315,12 @@ function App() {
               </Card>
             </div>
 
-            {/* Performance Summary */}
+            {/* Status Summary */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Performance Summary</CardTitle>
-                  <CardDescription>Breakdown of cost center performance against budget</CardDescription>
+                  <CardTitle>Cost Center Status Summary</CardTitle>
+                  <CardDescription>Overview of active and deleted cost centers</CardDescription>
                 </div>
                 <Button onClick={exportReport} className="flex items-center gap-2">
                   <Download className="h-4 w-4" />
@@ -328,60 +328,105 @@ function App() {
                 </Button>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-destructive">{jsonData.summary.overBudget}</div>
-                    <div className="text-sm text-muted-foreground">Over Budget</div>
+                    <div className="text-3xl font-bold text-primary">{jsonData.summary.totalActive}</div>
+                    <div className="text-sm text-muted-foreground">Active Cost Centers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-accent">{jsonData.summary.underBudget}</div>
-                    <div className="text-sm text-muted-foreground">Under Budget</div>
+                    <div className="text-3xl font-bold text-muted-foreground">{jsonData.summary.totalDeleted}</div>
+                    <div className="text-sm text-muted-foreground">Deleted Cost Centers</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{jsonData.summary.onBudget}</div>
-                    <div className="text-sm text-muted-foreground">On Budget</div>
+                </div>
+                
+                <Separator className="my-6" />
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Organizational Metrics (Active Centers Only)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{formatNumber(jsonData.summary.totalOrganizations)}</div>
+                      <div className="text-sm text-muted-foreground">Total Organizations</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{formatNumber(jsonData.summary.totalRepositories)}</div>
+                      <div className="text-sm text-muted-foreground">Total Repositories</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{formatNumber(jsonData.summary.totalMembers)}</div>
+                      <div className="text-sm text-muted-foreground">Total Members</div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Detailed Table */}
+            {/* Active Cost Centers Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Detailed Cost Center Analysis</CardTitle>
-                <CardDescription>Complete breakdown of all cost centers</CardDescription>
+                <CardTitle>Active Cost Centers - Organizational Breakdown</CardTitle>
+                <CardDescription>Detailed view of all active cost centers with organizational metrics</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Cost Center</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Budget</TableHead>
-                        <TableHead className="text-right">Actual</TableHead>
-                        <TableHead className="text-right">Variance</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>Cost Center Name</TableHead>
+                        <TableHead>Cost Center ID</TableHead>
+                        <TableHead className="text-right"># Organizations</TableHead>
+                        <TableHead className="text-right"># Repositories</TableHead>
+                        <TableHead className="text-right"># Members</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {jsonData.costCenters.map((center) => (
+                      {jsonData.activeCostCenters.map((center) => (
                         <TableRow key={center.id}>
                           <TableCell className="font-medium">{center.name}</TableCell>
-                          <TableCell>{center.category || center.department || 'N/A'}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(center.budget)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(center.actual)}</TableCell>
-                          <TableCell className={`text-right font-medium ${center.variance! > 0 ? 'text-destructive' : center.variance! < 0 ? 'text-accent' : 'text-foreground'}`}>
-                            {formatCurrency(center.variance!)}
-                          </TableCell>
-                          <TableCell>{getVarianceBadge(center.variance!)}</TableCell>
+                          <TableCell className="font-mono text-sm">{center.id}</TableCell>
+                          <TableCell className="text-right">{formatNumber(center.organizations || 0)}</TableCell>
+                          <TableCell className="text-right">{formatNumber(center.repositories || 0)}</TableCell>
+                          <TableCell className="text-right">{formatNumber(center.members || 0)}</TableCell>
                         </TableRow>
                       ))}
+                      {jsonData.activeCostCenters.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No active cost centers found
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Budget Performance Summary (only if budget data exists) */}
+            {jsonData.summary.overBudget !== undefined && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Budget Performance Summary</CardTitle>
+                  <CardDescription>Breakdown of cost center performance against budget</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-destructive">{jsonData.summary.overBudget}</div>
+                      <div className="text-sm text-muted-foreground">Over Budget</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-accent">{jsonData.summary.underBudget}</div>
+                      <div className="text-sm text-muted-foreground">Under Budget</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{jsonData.summary.onBudget}</div>
+                      <div className="text-sm text-muted-foreground">On Budget</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
@@ -395,23 +440,33 @@ function App() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">Your JSON file should contain cost center data in one of these formats:</p>
+              <p className="text-muted-foreground mb-4">Your JSON file should contain cost center data with organizational metrics:</p>
               <div className="bg-muted p-4 rounded-lg">
                 <pre className="text-sm text-muted-foreground overflow-x-auto">
 {`[
   {
     "id": "CC001",
-    "name": "Marketing",
-    "budget": 50000,
-    "actual": 52000,
-    "category": "Operations"
+    "name": "Marketing Team",
+    "organizations": 3,
+    "repositories": 45,
+    "members": 12,
+    "status": "active"
   },
   {
     "id": "CC002", 
-    "name": "HR",
-    "budget": 30000,
-    "actual": 28000,
-    "department": "Corporate"
+    "name": "Engineering Division",
+    "organizations": 8,
+    "repositories": 234,
+    "members": 67,
+    "status": "active"
+  },
+  {
+    "id": "CC003",
+    "name": "Legacy Support",
+    "organizations": 1,
+    "repositories": 5,
+    "members": 2,
+    "status": "deleted"
   }
 ]`}
                 </pre>
