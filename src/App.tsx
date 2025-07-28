@@ -471,15 +471,15 @@ function App() {
                 </label>
               </div>
               
-              <div className=\"text-center\">
-                <p className=\"text-sm text-muted-foreground mb-3\">Or try the application with sample data:</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
                 <Button 
                   onClick={loadExampleData} 
-                  variant=\"outline\" 
-                  className=\"flex items-center gap-2\"
+                  variant="outline" 
+                  className="flex items-center gap-2"
                   disabled={isLoading}
                 >
-                  <Database className=\"h-4 w-4\" />
+                  <Database className="h-4 w-4" />
                   Load Example Data
                 </Button>
               </div>
