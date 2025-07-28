@@ -603,7 +603,7 @@ function App() {
                           className="font-mono"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Required scopes: admin:enterprise
+                          Required scopes: manage_billing:enterprise
                         </p>
                       </div>
                       
@@ -1024,14 +1024,14 @@ function App() {
                   <div>
                     <h4 className="font-medium text-sm mb-2">1. Create a Personal Access Token</h4>
                     <p className="text-sm text-muted-foreground">
-                      Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+                      Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
                     </p>
                   </div>
                   
                   <div>
                     <h4 className="font-medium text-sm mb-2">2. Required Permissions</h4>
                     <p className="text-sm text-muted-foreground">
-                      Your token needs <code className="bg-muted px-1 rounded text-xs">admin:enterprise</code> scope to access cost center data
+                      Your token needs <code className="bg-muted px-1 rounded text-xs">manage_billing:enterprise</code> scope to access cost center data
                     </p>
                   </div>
                   
