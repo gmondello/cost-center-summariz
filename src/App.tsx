@@ -934,9 +934,9 @@ function App() {
                         <SelectValue placeholder="Resource Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Centers</SelectItem>
-                        <SelectItem value="with-resources">With Resources</SelectItem>
-                        <SelectItem value="empty">Empty Centers</SelectItem>
+                        <SelectItem value="all">All cost centers</SelectItem>
+                        <SelectItem value="with-resources">Cost centers with resources</SelectItem>
+                        <SelectItem value="empty">Empty cost centers</SelectItem>
                       </SelectContent>
                     </Select>
                     
