@@ -173,6 +173,7 @@ function App() {
     setApiConfig(null)
     setTempToken('')
     setTempEnterprise('')
+    setError('') // Clear any error messages
     toast.success('API configuration cleared')
   }
 
