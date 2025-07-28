@@ -598,7 +598,7 @@ function App() {
       <div className="container mx-auto p-6 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Summarizer</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
           <p className="text-muted-foreground">Upload JSON data to generate comprehensive cost center reports</p>
         </div>
 
