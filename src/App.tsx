@@ -40,6 +40,7 @@ function App() {
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
+  const [isDragOver, setIsDragOver] = useState(false)
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -51,6 +52,10 @@ function App() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    await processFile(file)
+  }
+
+  const processFile = async (file: File) => {
     setIsLoading(true)
     setError('')
     
@@ -69,6 +74,35 @@ function App() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(event.dataTransfer.files)
+    const jsonFile = files.find(file => file.type === 'application/json' || file.name.endsWith('.json'))
+    
+    if (!jsonFile) {
+      setError('Please drop a JSON file')
+      toast.error('Please drop a JSON file')
+      return
+    }
+
+    await processFile(jsonFile)
   }
 
   const processJsonData = (rawData: any): ParsedData => {
@@ -453,22 +487,33 @@ function App() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                <div
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    isDragOver 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border hover:bg-muted/50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FileText className="w-8 h-8 mb-3 text-muted-foreground" />
+                    <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
                     <p className="mb-2 text-sm text-muted-foreground">
                       <span className="font-semibold">Click to upload</span> or drag and drop
                     </p>
                     <p className="text-xs text-muted-foreground">JSON files only</p>
                   </div>
                   <input
+                    id="file-upload"
                     type="file"
                     className="hidden"
                     accept=".json"
                     onChange={handleFileUpload}
                     disabled={isLoading}
                   />
-                </label>
+                </div>
               </div>
               
               <div className="text-center">
