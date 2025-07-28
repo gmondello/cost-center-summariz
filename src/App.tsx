@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface Resource {
@@ -38,6 +40,12 @@ function App() {
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'Org' | 'Repo' | 'User'>('all')
+  const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -149,6 +157,65 @@ function App() {
     const users = center.resources.filter(r => r.type === 'User')
     return { orgs, repos, users }
   }
+
+  // Enhanced filtering and search logic
+  const filteredAndSortedCostCenters = useMemo(() => {
+    if (!jsonData) return []
+
+    let filtered = jsonData.activeCostCenters.filter(center => {
+      // Search filter - check cost center name, ID, and resource names
+      const searchLower = searchQuery.toLowerCase()
+      const matchesSearch = !searchQuery || 
+        center.name.toLowerCase().includes(searchLower) ||
+        center.id.toLowerCase().includes(searchLower) ||
+        center.resources.some(resource => 
+          resource.name.toLowerCase().includes(searchLower)
+        )
+
+      // Resource type filter
+      const matchesResourceType = resourceTypeFilter === 'all' || 
+        center.resources.some(resource => resource.type === resourceTypeFilter)
+
+      // Has resources filter
+      const matchesHasResources = hasResourcesFilter === 'all' ||
+        (hasResourcesFilter === 'with-resources' && center.resources.length > 0) ||
+        (hasResourcesFilter === 'empty' && center.resources.length === 0)
+
+      return matchesSearch && matchesResourceType && matchesHasResources
+    })
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      const { orgs: aOrgs, repos: aRepos, members: aMembers } = getResourceCounts(a)
+      const { orgs: bOrgs, repos: bRepos, members: bMembers } = getResourceCounts(b)
+
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'total-resources':
+          return (b.resources.length) - (a.resources.length)
+        case 'orgs':
+          return bOrgs - aOrgs
+        case 'repos':
+          return bRepos - aRepos
+        case 'users':
+          return bMembers - aMembers
+        default:
+          return a.name.localeCompare(b.name)
+      }
+    })
+
+    return filtered
+  }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, sortBy])
+
+  const clearFilters = () => {
+    setSearchQuery('')
+    setResourceTypeFilter('all')
+    setHasResourcesFilter('all')
+    setSortBy('name')
+  }
+
+  const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || sortBy !== 'name'
 
   const exportReport = () => {
     if (!jsonData) return
@@ -309,12 +376,87 @@ function App() {
             {/* Active Cost Centers Table with Resource Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Active Cost Centers - Resource Breakdown</CardTitle>
-                <CardDescription>Detailed view of all active cost centers with expandable resource details</CardDescription>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle>Active Cost Centers - Resource Breakdown</CardTitle>
+                    <CardDescription>
+                      {filteredAndSortedCostCenters.length} of {jsonData.activeCostCenters.length} cost centers
+                      {hasActiveFilters && ' (filtered)'}
+                    </CardDescription>
+                  </div>
+                </div>
+                
+                {/* Search and Filter Controls */}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                      <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search cost centers, IDs, or resource names..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    
+                    {/* Clear Filters Button */}
+                    {hasActiveFilters && (
+                      <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
+                        <X className="h-4 w-4" />
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Resource Type Filter */}
+                    <div className="flex items-center gap-2">
+                      <FunnelSimple className="h-4 w-4 text-muted-foreground" />
+                      <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(value)}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Resource Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Resources</SelectItem>
+                          <SelectItem value="Org">Organizations</SelectItem>
+                          <SelectItem value="Repo">Repositories</SelectItem>
+                          <SelectItem value="User">Users</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Has Resources Filter */}
+                    <Select value={hasResourcesFilter} onValueChange={(value: any) => setHasResourcesFilter(value)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Resource Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Centers</SelectItem>
+                        <SelectItem value="with-resources">With Resources</SelectItem>
+                        <SelectItem value="empty">Empty Centers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Sort By */}
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-44">
+                        <SelectValue placeholder="Sort By" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                        <SelectItem value="total-resources">Total Resources</SelectItem>
+                        <SelectItem value="orgs">Organizations</SelectItem>
+                        <SelectItem value="repos">Repositories</SelectItem>
+                        <SelectItem value="users">Users</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {jsonData.activeCostCenters.map((center) => {
+                  {filteredAndSortedCostCenters.map((center) => {
                     const { orgs, repos, members } = getResourceCounts(center)
                     const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
                     const isExpanded = expandedCenters.has(center.id)
@@ -422,6 +564,18 @@ function App() {
                       </Collapsible>
                     )
                   })}
+                  
+                  {filteredAndSortedCostCenters.length === 0 && jsonData.activeCostCenters.length > 0 && (
+                    <div className="text-center text-muted-foreground py-8 border rounded-lg">
+                      <div className="space-y-2">
+                        <MagnifyingGlass className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                        <p>No cost centers match your current filters</p>
+                        <Button variant="outline" onClick={clearFilters} className="mt-2">
+                          Clear Filters
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   
                   {jsonData.activeCostCenters.length === 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">

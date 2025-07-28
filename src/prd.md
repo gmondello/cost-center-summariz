@@ -31,9 +31,14 @@
 - **Success Criteria**: Identifies missing fields, invalid formats, and provides actionable error messages
 
 ### Report Generation
-- **Functionality**: Transforms JSON data into structured summary report with expandable resource details
-- **Purpose**: Makes complex financial data digestible and actionable while providing detailed resource visibility
-- **Success Criteria**: Shows totals, breakdowns by category, and expandable views of specific organization, repository, and user names
+- **Functionality**: Transforms JSON data into structured summary report with expandable resource details, search functionality, and filtering options
+- **Purpose**: Makes complex financial data digestible and actionable while providing detailed resource visibility and quick data discovery
+- **Success Criteria**: Shows totals, breakdowns by category, expandable views of specific organization/repository/user names, and responsive search/filter capabilities
+
+### Advanced Search & Filtering
+- **Functionality**: Real-time search across cost center names, IDs, and resource names with filtering by resource type, resource status, and sorting options
+- **Purpose**: Enables quick discovery of specific cost centers or resources in large datasets
+- **Success Criteria**: Instant search results, clear filter states, intuitive filter combinations, and helpful empty states
 
 ### Resource Detail View
 - **Functionality**: Expandable sections showing specific names of organizations, repositories, and users for each cost center
@@ -90,13 +95,13 @@
 - **Contextual Appropriateness**: Professional, subtle animations that enhance rather than distract
 
 ### UI Elements & Component Selection
-- **Component Usage**: Cards for sections, Collapsible components for resource details, Buttons for actions, Badges for resource names, Upload area for file input
-- **Component Customization**: Rounded corners for approachability, consistent spacing, color-coded badges for different resource types
-- **Component States**: Clear hover, active, and disabled states for all interactive elements, smooth expansion animations
-- **Icon Selection**: Upload, download, checkmark, chevron arrows, and resource type icons (buildings, git branches, users)
-- **Component Hierarchy**: Primary upload button, secondary action buttons, expandable detail sections, tertiary utility controls
+- **Component Usage**: Cards for sections, Collapsible components for resource details, Input for search, Select dropdowns for filtering, Buttons for actions, Badges for resource names, Upload area for file input
+- **Component Customization**: Rounded corners for approachability, consistent spacing, color-coded badges for different resource types, search icons and filter indicators
+- **Component States**: Clear hover, active, and disabled states for all interactive elements, smooth expansion animations, focus states for search inputs
+- **Icon Selection**: Upload, download, checkmark, chevron arrows, magnifying glass for search, funnel for filters, X for clearing, and resource type icons (buildings, git branches, users)
+- **Component Hierarchy**: Primary upload button, search and filter controls, secondary action buttons, expandable detail sections, tertiary utility controls
 - **Spacing System**: Consistent padding using Tailwind's 4, 6, 8, 12 spacing scale
-- **Mobile Adaptation**: Stack cards vertically, maintain touch-friendly button sizes, responsive badge wrapping
+- **Mobile Adaptation**: Stack filter controls vertically, maintain touch-friendly button sizes, responsive badge wrapping, collapsible filter sections
 
 ### Visual Consistency Framework
 - **Design System Approach**: Component-based design with reusable patterns
@@ -108,9 +113,9 @@
 - **Contrast Goal**: WCAG AA compliance minimum for all text and interactive elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Invalid JSON format, missing required fields, large file sizes
-- **Edge Case Handling**: Clear error messages, format examples, file size limits
-- **Technical Constraints**: Browser JSON parsing limits, memory considerations for large datasets
+- **Potential Obstacles**: Invalid JSON format, missing required fields, large file sizes, search performance with large datasets
+- **Edge Case Handling**: Clear error messages, format examples, file size limits, efficient filtering algorithms, helpful empty search states
+- **Technical Constraints**: Browser JSON parsing limits, memory considerations for large datasets, search performance optimization
 
 ## Implementation Considerations
 - **Scalability Needs**: Ability to handle various JSON schemas, potential for template customization
