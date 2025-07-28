@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database } from '@phosphor-icons/react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useKV } from '@github/spark/hooks'
 
 interface Resource {
   type: 'Org' | 'Repo' | 'User'
@@ -35,6 +37,11 @@ interface ParsedData {
   }
 }
 
+interface GitHubAPIConfig {
+  token: string
+  enterprise: string
+}
+
 function App() {
   const [jsonData, setJsonData] = useState<ParsedData | null>(null)
   const [error, setError] = useState<string>('')
@@ -42,11 +49,85 @@ function App() {
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState(false)
   
+  // API Configuration - persisted in KV store
+  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
+  const [tempToken, setTempToken] = useState('')
+  const [tempEnterprise, setTempEnterprise] = useState('')
+  
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
   const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'Org' | 'Repo' | 'User'>('all')
   const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
+
+  const fetchFromAPI = async () => {
+    if (!apiConfig?.token || !apiConfig?.enterprise) {
+      setError('Please configure your GitHub API token and enterprise slug first')
+      toast.error('API configuration required')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(`https://api.github.com/enterprises/${apiConfig.enterprise}/settings/billing/cost-centers`, {
+        headers: {
+          'Authorization': `token ${apiConfig.token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please check your GitHub token.')
+        } else if (response.status === 403) {
+          throw new Error('Access denied. You may not have permission to access this enterprise\'s cost centers.')
+        } else if (response.status === 404) {
+          throw new Error('Enterprise not found. Please check your enterprise slug.')
+        } else {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+      }
+
+      const rawData = await response.json()
+      const processedData = processJsonData(rawData)
+      setJsonData(processedData)
+      toast.success('Cost center data fetched successfully from GitHub API!')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data from GitHub API'
+      setError(errorMessage)
+      toast.error('Failed to fetch from API')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const saveAPIConfig = () => {
+    if (!tempToken.trim() || !tempEnterprise.trim()) {
+      toast.error('Please enter both token and enterprise slug')
+      return
+    }
+
+    setApiConfig({
+      token: tempToken.trim(),
+      enterprise: tempEnterprise.trim()
+    })
+    
+    // Clear temporary values for security
+    setTempToken('')
+    setTempEnterprise('')
+    
+    toast.success('API configuration saved!')
+  }
+
+  const clearAPIConfig = () => {
+    setApiConfig(null)
+    setTempToken('')
+    setTempEnterprise('')
+    toast.success('API configuration cleared')
+  }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -478,64 +559,154 @@ function App() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Upload JSON Data
+              Load Cost Center Data
             </CardTitle>
             <CardDescription>
-              Select a JSON file containing cost center data to generate a summary report
+              Fetch data directly from GitHub API or upload a JSON file containing cost center data
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-center w-full">
-                <div
-                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                    isDragOver 
-                      ? 'border-primary bg-primary/10' 
-                      : 'border-border hover:bg-muted/50'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-muted-foreground">JSON files only</p>
+            <Tabs defaultValue="api" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="api" className="flex items-center gap-2">
+                  <CloudArrowDown className="h-4 w-4" />
+                  GitHub API
+                </TabsTrigger>
+                <TabsTrigger value="file" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Upload File
+                </TabsTrigger>
+              </TabsList>
+
+              {/* GitHub API Tab */}
+              <TabsContent value="api" className="space-y-4">
+                {!apiConfig ? (
+                  <div className="space-y-4">
+                    <Alert>
+                      <Key className="h-4 w-4" />
+                      <AlertDescription>
+                        Configure your GitHub credentials to fetch cost center data directly from the API.
+                        You'll need a personal access token with enterprise billing permissions.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          GitHub Personal Access Token
+                        </label>
+                        <Input
+                          type="password"
+                          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                          value={tempToken}
+                          onChange={(e) => setTempToken(e.target.value)}
+                          className="font-mono"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Required scopes: admin:enterprise
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          Enterprise Slug
+                        </label>
+                        <Input
+                          placeholder="your-enterprise"
+                          value={tempEnterprise}
+                          onChange={(e) => setTempEnterprise(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Found in your enterprise URL
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button onClick={saveAPIConfig} className="flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      Save Configuration
+                    </Button>
                   </div>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    className="hidden"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    disabled={isLoading}
-                  />
+                ) : (
+                  <div className="space-y-4">
+                    <Alert>
+                      <CheckCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        onClick={fetchFromAPI} 
+                        disabled={isLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <CloudArrowDown className="h-4 w-4" />
+                        {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
+                      </Button>
+                      
+                      <Button variant="outline" onClick={clearAPIConfig}>
+                        Clear Configuration
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* File Upload Tab */}
+              <TabsContent value="file" className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <div
+                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                      isDragOver 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-border hover:bg-muted/50'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <p className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-muted-foreground">JSON files only</p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      className="hidden"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
-                <Button 
-                  onClick={loadExampleData} 
-                  variant="outline" 
-                  className="flex items-center gap-2"
-                  disabled={isLoading}
-                >
-                  <Database className="h-4 w-4" />
-                  Load Example Data
-                </Button>
-              </div>
-              
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-            </div>
+                
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
+                  <Button 
+                    onClick={loadExampleData} 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                    disabled={isLoading}
+                  >
+                    <Database className="h-4 w-4" />
+                    Load Example Data
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
+            
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
@@ -836,17 +1007,62 @@ function App() {
 
         {/* Sample Data Info */}
         {!jsonData && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Expected JSON Format
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Your JSON should contain cost center data exactly matching the API schema you provided:</p>
-              <div className="bg-muted p-4 rounded-lg">
-                <pre className="text-sm text-muted-foreground overflow-x-auto">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  GitHub API Setup Guide
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  To fetch cost center data directly from GitHub Enterprise, you'll need to create a personal access token with the appropriate permissions.
+                </p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">1. Create a Personal Access Token</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">2. Required Permissions</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Your token needs <code className="bg-muted px-1 rounded text-xs">admin:enterprise</code> scope to access cost center data
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">3. Find Your Enterprise Slug</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This is the name in your enterprise URL: <code className="bg-muted px-1 rounded text-xs">https://github.com/enterprises/YOUR-ENTERPRISE-SLUG</code>
+                    </p>
+                  </div>
+                </div>
+                
+                <Alert>
+                  <Key className="h-4 w-4" />
+                  <AlertDescription>
+                    Your token and enterprise configuration are securely stored locally and never shared.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Expected JSON Format
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Your JSON should contain cost center data exactly matching the GitHub API schema:</p>
+                <div className="bg-muted p-4 rounded-lg">
+                  <pre className="text-sm text-muted-foreground overflow-x-auto">
 {`{
   "costCenters": [
     {
@@ -876,10 +1092,11 @@ function App() {
     }
   ]
 }`}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

@@ -1,37 +1,43 @@
 # Cost Center Summarizer - Product Requirements Document
 
 ## Core Purpose & Success
-- **Mission Statement**: Transform complex JSON cost center data into clear, actionable summary reports for financial analysis.
-- **Success Indicators**: Users can quickly upload JSON data and receive formatted reports that highlight key metrics and insights.
-- **Experience Qualities**: Professional, efficient, trustworthy.
+- **Mission Statement**: Transform GitHub Enterprise cost center data into clear, actionable summary reports through direct API integration or file upload.
+- **Success Indicators**: Users can efficiently fetch live data from GitHub or upload JSON files and receive formatted reports highlighting key metrics and insights.
+- **Experience Qualities**: Professional, efficient, trustworthy, secure.
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (file upload, data processing, report generation with basic state management)
-- **Primary User Activity**: Acting (uploading data) and Consuming (viewing reports)
+- **Complexity Level**: Light Application (API integration, file upload, data processing, report generation with secure credential management)
+- **Primary User Activity**: Acting (API authentication/file upload) and Consuming (viewing reports)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Financial teams need to quickly analyze cost center data stored in JSON format and generate readable reports for stakeholders.
-- **User Context**: Business users working with financial data who need quick insights without technical complexity.
-- **Critical Path**: Upload JSON → Parse & validate data → Generate formatted report → Review/export results
+- **Core Problem Analysis**: Enterprise teams need to quickly analyze GitHub cost center data for billing and resource allocation insights without complex technical setup.
+- **User Context**: Business users and IT administrators working with GitHub Enterprise billing who need quick insights with both live data access and offline analysis capabilities.
+- **Critical Path**: Configure API credentials OR upload JSON → Fetch/parse & validate data → Generate formatted report → Review/export results
 - **Key Moments**: 
-  1. File upload validation and feedback
-  2. Report generation and visualization
-  3. Clear presentation of key metrics
+  1. Secure API credential setup and validation
+  2. Live data fetching with clear status feedback
+  3. Report generation and visualization
+  4. Clear presentation of key metrics and resource details
 
 ## Essential Features
 
-### JSON File Upload
-- **Functionality**: Drag-and-drop or click-to-upload interface for JSON files
-- **Purpose**: Easy data input without requiring technical knowledge
+### GitHub API Integration
+- **Functionality**: Secure token storage and direct integration with GitHub Enterprise billing API
+- **Purpose**: Enables real-time data access without manual file exports
+- **Success Criteria**: Secure credential storage, clear setup instructions, proper error handling for authentication and permissions
+
+### JSON File Upload (Alternative)
+- **Functionality**: Drag-and-drop or click-to-upload interface for JSON files as backup option
+- **Purpose**: Supports offline analysis and users without API access
 - **Success Criteria**: Accepts valid JSON, provides clear error messages for invalid files
 
 ### Data Validation & Parsing
-- **Functionality**: Validates JSON structure and extracts cost center information
+- **Functionality**: Validates GitHub API response or JSON structure and extracts cost center information
 - **Purpose**: Ensures data integrity and provides helpful feedback
 - **Success Criteria**: Identifies missing fields, invalid formats, and provides actionable error messages
 
 ### Report Generation
-- **Functionality**: Transforms JSON data into structured summary report with expandable resource details, search functionality, and filtering options
+- **Functionality**: Transforms cost center data into structured summary report with expandable resource details, search functionality, and filtering options
 - **Purpose**: Makes complex financial data digestible and actionable while providing detailed resource visibility and quick data discovery
 - **Success Criteria**: Shows totals, breakdowns by category, expandable views of specific organization/repository/user names, and responsive search/filter capabilities
 
