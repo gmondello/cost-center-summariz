@@ -104,7 +104,7 @@ function App() {
     }
   }
 
-  const saveAPIConfig = () => {
+  const saveAPIConfigAndFetch = async () => {
     if (!tempToken.trim()) {
       setError('GitHub Personal Access Token is required')
       toast.error('Please enter your GitHub token')
@@ -118,16 +118,55 @@ function App() {
     }
 
     setError('') // Clear any previous errors
-    setApiConfig({
+    setIsLoading(true)
+    
+    const newConfig = {
       token: tempToken.trim(),
       enterprise: tempEnterprise.trim()
-    })
+    }
+    
+    // Save the configuration
+    setApiConfig(newConfig)
     
     // Clear temporary values for security
     setTempToken('')
     setTempEnterprise('')
     
-    toast.success('API configuration saved!')
+    toast.success('Configuration saved! Fetching data...')
+
+    // Immediately fetch data with the new configuration
+    try {
+      const response = await fetch(`https://api.github.com/enterprises/${newConfig.enterprise}/settings/billing/cost-centers`, {
+        headers: {
+          'Authorization': `token ${newConfig.token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please check your GitHub token.')
+        } else if (response.status === 403) {
+          throw new Error('Access denied. You may not have permission to access this enterprise\'s cost centers.')
+        } else if (response.status === 404) {
+          throw new Error('Enterprise not found. Please check your enterprise slug.')
+        } else {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+      }
+
+      const rawData = await response.json()
+      const processedData = processJsonData(rawData)
+      setJsonData(processedData)
+      toast.success('Cost center data fetched successfully from GitHub API!')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data from GitHub API'
+      setError(errorMessage)
+      toast.error('Failed to fetch from API')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const clearAPIConfig = () => {
@@ -632,9 +671,9 @@ function App() {
                           </div>
                         </div>
                         
-                        <Button onClick={saveAPIConfig} className="flex items-center gap-2">
+                        <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
                           <Key className="h-4 w-4" />
-                          Save Configuration
+                          {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
                         </Button>
                       </div>
                     ) : (
