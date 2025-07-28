@@ -586,7 +586,7 @@ function App() {
                       <Key className="h-4 w-4" />
                       <AlertDescription>
                         Configure your GitHub credentials to fetch cost center data directly from the API.
-                        You'll need a personal access token with enterprise billing permissions.
+                        You'll need a personal access token with `manage_billing:enterprise` scope.
                       </AlertDescription>
                     </Alert>
                     
