@@ -11,23 +11,34 @@ import { toast } from 'sonner'
 interface CostCenter {
   id: string
   name: string
-  budget: number
-  actual: number
+  budget?: number
+  actual?: number
   variance?: number
   category?: string
   department?: string
+  status?: 'active' | 'deleted'
+  organizations?: number
+  repositories?: number
+  members?: number
   [key: string]: any
 }
 
 interface ParsedData {
   costCenters: CostCenter[]
+  activeCostCenters: CostCenter[]
+  deletedCostCenters: CostCenter[]
   totalBudget: number
   totalActual: number
   totalVariance: number
   summary: {
-    overBudget: number
-    underBudget: number
-    onBudget: number
+    totalActive: number
+    totalDeleted: number
+    totalOrganizations: number
+    totalRepositories: number
+    totalMembers: number
+    overBudget?: number
+    underBudget?: number
+    onBudget?: number
   }
 }
 
@@ -82,32 +93,74 @@ function App() {
       if (!center.name) {
         center.name = center.id || `Cost Center ${index + 1}`
       }
-      if (typeof center.budget !== 'number') {
+      
+      // Set default status to active if not provided
+      if (!center.status) {
+        center.status = 'active'
+      }
+      
+      // Parse numeric fields with defaults
+      if (center.budget !== undefined && typeof center.budget !== 'number') {
         center.budget = parseFloat(center.budget) || 0
       }
-      if (typeof center.actual !== 'number') {
+      if (center.actual !== undefined && typeof center.actual !== 'number') {
         center.actual = parseFloat(center.actual) || 0
       }
-      center.variance = center.actual - center.budget
+      if (center.budget !== undefined && center.actual !== undefined) {
+        center.variance = center.actual - center.budget
+      }
+      
+      // Parse organizational metrics
+      if (center.organizations !== undefined && typeof center.organizations !== 'number') {
+        center.organizations = parseInt(center.organizations) || 0
+      }
+      if (center.repositories !== undefined && typeof center.repositories !== 'number') {
+        center.repositories = parseInt(center.repositories) || 0
+      }
+      if (center.members !== undefined && typeof center.members !== 'number') {
+        center.members = parseInt(center.members) || 0
+      }
+      
       return center
     })
 
-    // Calculate totals
-    const totalBudget = processedCenters.reduce((sum, center) => sum + center.budget, 0)
-    const totalActual = processedCenters.reduce((sum, center) => sum + center.actual, 0)
+    // Separate active and deleted cost centers
+    const activeCostCenters = processedCenters.filter(center => center.status === 'active')
+    const deletedCostCenters = processedCenters.filter(center => center.status === 'deleted')
+
+    // Calculate totals for active cost centers
+    const totalBudget = activeCostCenters.reduce((sum, center) => sum + (center.budget || 0), 0)
+    const totalActual = activeCostCenters.reduce((sum, center) => sum + (center.actual || 0), 0)
     const totalVariance = totalActual - totalBudget
 
-    // Calculate summary statistics
-    const overBudget = processedCenters.filter(center => center.variance! > 0).length
-    const underBudget = processedCenters.filter(center => center.variance! < 0).length
-    const onBudget = processedCenters.filter(center => center.variance === 0).length
+    // Calculate organizational totals for active cost centers
+    const totalOrganizations = activeCostCenters.reduce((sum, center) => sum + (center.organizations || 0), 0)
+    const totalRepositories = activeCostCenters.reduce((sum, center) => sum + (center.repositories || 0), 0)
+    const totalMembers = activeCostCenters.reduce((sum, center) => sum + (center.members || 0), 0)
+
+    // Calculate budget summary statistics (only for centers with budget data)
+    const centersWithBudget = activeCostCenters.filter(center => center.budget !== undefined && center.actual !== undefined)
+    const overBudget = centersWithBudget.filter(center => center.variance! > 0).length
+    const underBudget = centersWithBudget.filter(center => center.variance! < 0).length
+    const onBudget = centersWithBudget.filter(center => center.variance === 0).length
 
     return {
       costCenters: processedCenters,
+      activeCostCenters,
+      deletedCostCenters,
       totalBudget,
       totalActual,
       totalVariance,
-      summary: { overBudget, underBudget, onBudget }
+      summary: { 
+        totalActive: activeCostCenters.length,
+        totalDeleted: deletedCostCenters.length,
+        totalOrganizations,
+        totalRepositories,
+        totalMembers,
+        overBudget: centersWithBudget.length > 0 ? overBudget : undefined,
+        underBudget: centersWithBudget.length > 0 ? underBudget : undefined,
+        onBudget: centersWithBudget.length > 0 ? onBudget : undefined
+      }
     }
   }
 
@@ -116,6 +169,10 @@ function App() {
       style: 'currency',
       currency: 'USD'
     }).format(amount)
+  }
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num)
   }
 
   const getVarianceBadge = (variance: number) => {
