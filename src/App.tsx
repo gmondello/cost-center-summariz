@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface Resource {
@@ -127,6 +127,194 @@ function App() {
         totalRepositories,
         totalMembers
       }
+    }
+  }
+
+  const loadExampleData = () => {
+    setIsLoading(true)
+    setError('')
+
+    // Mock data based on your provided JSON schema
+    const mockData = {
+      costCenters: [
+        {
+          id: "78b18988-0df4-4118-bda8-8167132a2256",
+          name: "still-First",
+          state: "active",
+          resources: [
+            {
+              type: "Repo",
+              name: "bryant-test-org/blobfuse-test"
+            }
+          ]
+        },
+        {
+          id: "d8a3b08b-02fd-4c87-91fd-dad18e71b7a7",
+          name: "el-segundo", 
+          state: "active",
+          resources: [
+            {
+              type: "User",
+              name: "gregoriousmonk"
+            },
+            {
+              type: "Org",
+              name: "gmondello-temp-test"
+            }
+          ]
+        },
+        {
+          id: "c59f5d06-6ecc-44a9-bbef-a40e398b4392",
+          name: "123123123",
+          state: "deleted",
+          resources: []
+        },
+        {
+          id: "3b080bd5-f253-4671-b77d-3558805b4fca",
+          name: "ServiceID_1234567",
+          state: "active",
+          resources: []
+        },
+        {
+          id: "50d1ac75-20ac-436d-8e43-8a07e8cc7577",
+          name: "mp-test",
+          state: "active",
+          resources: [
+            {
+              type: "Repo",
+              name: "10k-repos/test-public"
+            }
+          ]
+        },
+        {
+          id: "84b98dc5-04c5-4400-9e21-4b785b15757e",
+          name: "test-subset-km",
+          state: "active", 
+          resources: [
+            {
+              type: "Org",
+              name: "Avocado-Extra-Charge"
+            }
+          ]
+        },
+        {
+          id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+          name: "Marketing Division",
+          state: "active",
+          resources: [
+            {
+              type: "Org",
+              name: "marketing-team"
+            },
+            {
+              type: "Repo", 
+              name: "marketing-team/website"
+            },
+            {
+              type: "Repo",
+              name: "marketing-team/campaigns"
+            },
+            {
+              type: "User",
+              name: "sarah.marketing"
+            },
+            {
+              type: "User",
+              name: "john.designer"
+            },
+            {
+              type: "User",
+              name: "mike.content"
+            }
+          ]
+        },
+        {
+          id: "f9e8d7c6-b5a4-9384-7261-504938271650",
+          name: "Engineering Hub",
+          state: "active",
+          resources: [
+            {
+              type: "Org",
+              name: "engineering-core"
+            },
+            {
+              type: "Org", 
+              name: "engineering-platform"
+            },
+            {
+              type: "Repo",
+              name: "engineering-core/api-gateway"
+            },
+            {
+              type: "Repo",
+              name: "engineering-core/user-service"
+            },
+            {
+              type: "Repo",
+              name: "engineering-platform/deployment-tools"
+            },
+            {
+              type: "User",
+              name: "alice.architect"
+            },
+            {
+              type: "User",
+              name: "bob.backend"
+            },
+            {
+              type: "User",
+              name: "charlie.devops"
+            },
+            {
+              type: "User",
+              name: "diana.frontend"
+            }
+          ]
+        },
+        {
+          id: "5a4b3c2d-1e0f-9876-5432-1098765fedcb",
+          name: "Research Lab",
+          state: "active",
+          resources: [
+            {
+              type: "Repo",
+              name: "research-lab/ml-experiments"
+            },
+            {
+              type: "Repo",
+              name: "research-lab/data-analysis"
+            },
+            {
+              type: "User",
+              name: "dr.researcher"
+            }
+          ]
+        },
+        {
+          id: "9z8y7x6w-5v4u-3t2s-1r0q-9p8o7n6m5l4k",
+          name: "Legacy Project Alpha",
+          state: "deleted",
+          resources: []
+        },
+        {
+          id: "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+          name: "Legacy Project Beta", 
+          state: "deleted",
+          resources: []
+        }
+      ]
+    }
+
+    try {
+      const processedData = processJsonData(mockData)
+      setJsonData(processedData)
+      toast.success('Example data loaded successfully!')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load example data'
+      setError(errorMessage)
+      toast.error('Failed to load example data')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -281,6 +469,19 @@ function App() {
                     disabled={isLoading}
                   />
                 </label>
+              </div>
+              
+              <div className=\"text-center\">
+                <p className=\"text-sm text-muted-foreground mb-3\">Or try the application with sample data:</p>
+                <Button 
+                  onClick={loadExampleData} 
+                  variant=\"outline\" 
+                  className=\"flex items-center gap-2\"
+                  disabled={isLoading}
+                >
+                  <Database className=\"h-4 w-4\" />
+                  Load Example Data
+                </Button>
               </div>
               
               {error && (
