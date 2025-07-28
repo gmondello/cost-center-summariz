@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Upload, FileText, Download, AlertCircle, CheckCircle } from '@phosphor-icons/react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Badge } from '@/components/ui/badge'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 interface Resource {
@@ -35,6 +37,7 @@ function App() {
   const [jsonData, setJsonData] = useState<ParsedData | null>(null)
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -128,6 +131,23 @@ function App() {
     const repos = center.resources.filter(r => r.type === 'Repo').length
     const members = center.resources.filter(r => r.type === 'User').length
     return { orgs, repos, members }
+  }
+
+  const toggleCenterExpansion = (centerId: string) => {
+    const newExpanded = new Set(expandedCenters)
+    if (newExpanded.has(centerId)) {
+      newExpanded.delete(centerId)
+    } else {
+      newExpanded.add(centerId)
+    }
+    setExpandedCenters(newExpanded)
+  }
+
+  const getResourcesByType = (center: CostCenter) => {
+    const orgs = center.resources.filter(r => r.type === 'Org')
+    const repos = center.resources.filter(r => r.type === 'Repo')
+    const users = center.resources.filter(r => r.type === 'User')
+    return { orgs, repos, users }
   }
 
   const exportReport = () => {
@@ -286,46 +306,128 @@ function App() {
               </CardContent>
             </Card>
 
-            {/* Active Cost Centers Table */}
+            {/* Active Cost Centers Table with Resource Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Active Cost Centers - Resource Breakdown</CardTitle>
-                <CardDescription>Detailed view of all active cost centers with resource counts</CardDescription>
+                <CardDescription>Detailed view of all active cost centers with expandable resource details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cost Center Name</TableHead>
-                        <TableHead>Cost Center ID</TableHead>
-                        <TableHead className="text-right"># Organizations</TableHead>
-                        <TableHead className="text-right"># Repositories</TableHead>
-                        <TableHead className="text-right"># Members</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {jsonData.activeCostCenters.map((center) => {
-                        const { orgs, repos, members } = getResourceCounts(center)
-                        return (
-                          <TableRow key={center.id}>
-                            <TableCell className="font-medium">{center.name}</TableCell>
-                            <TableCell className="font-mono text-sm">{center.id}</TableCell>
-                            <TableCell className="text-right">{formatNumber(orgs)}</TableCell>
-                            <TableCell className="text-right">{formatNumber(repos)}</TableCell>
-                            <TableCell className="text-right">{formatNumber(members)}</TableCell>
-                          </TableRow>
-                        )
-                      })}
-                      {jsonData.activeCostCenters.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                            No active cost centers found
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-4">
+                  {jsonData.activeCostCenters.map((center) => {
+                    const { orgs, repos, members } = getResourceCounts(center)
+                    const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
+                    const isExpanded = expandedCenters.has(center.id)
+                    
+                    return (
+                      <Collapsible key={center.id} open={isExpanded} onOpenChange={() => toggleCenterExpansion(center.id)}>
+                        <div className="rounded-lg border bg-card">
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-between p-4 h-auto hover:bg-muted/50"
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <div className="text-left">
+                                  <div className="font-medium text-lg">{center.name}</div>
+                                  <div className="font-mono text-sm text-muted-foreground">{center.id}</div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                  <div className="flex gap-4 text-sm">
+                                    <span className="flex items-center gap-1">
+                                      <Buildings className="h-4 w-4 text-primary" />
+                                      {formatNumber(orgs)} Orgs
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <GitBranch className="h-4 w-4 text-accent" />
+                                      {formatNumber(repos)} Repos
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <User className="h-4 w-4 text-foreground" />
+                                      {formatNumber(members)} Members
+                                    </span>
+                                  </div>
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </div>
+                            </Button>
+                          </CollapsibleTrigger>
+                          
+                          <CollapsibleContent>
+                            <div className="px-4 pb-4 space-y-4">
+                              {/* Organizations */}
+                              {orgList.length > 0 && (
+                                <div>
+                                  <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
+                                    <Buildings className="h-4 w-4 text-primary" />
+                                    Organizations ({orgList.length})
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {orgList.map((org, index) => (
+                                      <Badge key={index} variant="outline" className="border-primary/30 text-primary">
+                                        {org.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Repositories */}
+                              {repoList.length > 0 && (
+                                <div>
+                                  <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
+                                    <GitBranch className="h-4 w-4 text-accent" />
+                                    Repositories ({repoList.length})
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {repoList.map((repo, index) => (
+                                      <Badge key={index} variant="outline" className="border-accent/30 text-accent">
+                                        {repo.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Users */}
+                              {userList.length > 0 && (
+                                <div>
+                                  <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
+                                    <User className="h-4 w-4 text-foreground" />
+                                    Members ({userList.length})
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {userList.map((user, index) => (
+                                      <Badge key={index} variant="outline" className="border-border">
+                                        {user.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Empty state */}
+                              {orgList.length === 0 && repoList.length === 0 && userList.length === 0 && (
+                                <div className="text-center text-muted-foreground py-4">
+                                  No resources assigned to this cost center
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </div>
+                      </Collapsible>
+                    )
+                  })}
+                  
+                  {jsonData.activeCostCenters.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8 border rounded-lg">
+                      No active cost centers found
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

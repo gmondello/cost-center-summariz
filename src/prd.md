@@ -31,9 +31,14 @@
 - **Success Criteria**: Identifies missing fields, invalid formats, and provides actionable error messages
 
 ### Report Generation
-- **Functionality**: Transforms JSON data into structured summary report
-- **Purpose**: Makes complex financial data digestible and actionable
-- **Success Criteria**: Shows totals, breakdowns by category, trends, and key insights
+- **Functionality**: Transforms JSON data into structured summary report with expandable resource details
+- **Purpose**: Makes complex financial data digestible and actionable while providing detailed resource visibility
+- **Success Criteria**: Shows totals, breakdowns by category, and expandable views of specific organization, repository, and user names
+
+### Resource Detail View
+- **Functionality**: Expandable sections showing specific names of organizations, repositories, and users for each cost center
+- **Purpose**: Provides granular visibility into resource allocation without overwhelming the main summary
+- **Success Criteria**: Clean, organized display of resource names with clear visual categorization and easy expansion/collapse
 
 ### Export Capabilities
 - **Functionality**: Allow users to save or print the generated report
@@ -85,13 +90,13 @@
 - **Contextual Appropriateness**: Professional, subtle animations that enhance rather than distract
 
 ### UI Elements & Component Selection
-- **Component Usage**: Cards for sections, Buttons for actions, Tables for data display, Upload area for file input
-- **Component Customization**: Rounded corners for approachability, consistent spacing
-- **Component States**: Clear hover, active, and disabled states for all interactive elements
-- **Icon Selection**: Upload, download, checkmark, and data visualization icons
-- **Component Hierarchy**: Primary upload button, secondary action buttons, tertiary utility controls
+- **Component Usage**: Cards for sections, Collapsible components for resource details, Buttons for actions, Badges for resource names, Upload area for file input
+- **Component Customization**: Rounded corners for approachability, consistent spacing, color-coded badges for different resource types
+- **Component States**: Clear hover, active, and disabled states for all interactive elements, smooth expansion animations
+- **Icon Selection**: Upload, download, checkmark, chevron arrows, and resource type icons (buildings, git branches, users)
+- **Component Hierarchy**: Primary upload button, secondary action buttons, expandable detail sections, tertiary utility controls
 - **Spacing System**: Consistent padding using Tailwind's 4, 6, 8, 12 spacing scale
-- **Mobile Adaptation**: Stack cards vertically, maintain touch-friendly button sizes
+- **Mobile Adaptation**: Stack cards vertically, maintain touch-friendly button sizes, responsive badge wrapping
 
 ### Visual Consistency Framework
 - **Design System Approach**: Component-based design with reusable patterns
