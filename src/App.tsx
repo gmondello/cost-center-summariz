@@ -105,11 +105,19 @@ function App() {
   }
 
   const saveAPIConfig = () => {
-    if (!tempToken.trim() || !tempEnterprise.trim()) {
-      toast.error('Please enter both token and enterprise slug')
+    if (!tempToken.trim()) {
+      setError('GitHub Personal Access Token is required')
+      toast.error('Please enter your GitHub token')
+      return
+    }
+    
+    if (!tempEnterprise.trim()) {
+      setError('Enterprise slug is required')
+      toast.error('Please enter your enterprise slug')
       return
     }
 
+    setError('') // Clear any previous errors
     setApiConfig({
       token: tempToken.trim(),
       enterprise: tempEnterprise.trim()
@@ -556,158 +564,195 @@ function App() {
 
         {/* Upload Section */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Load Cost Center Data
-            </CardTitle>
-            <CardDescription>
-              Fetch data directly from GitHub API or upload a JSON file containing cost center data
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="api" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="api" className="flex items-center gap-2">
-                  <CloudArrowDown className="h-4 w-4" />
-                  GitHub API
-                </TabsTrigger>
-                <TabsTrigger value="file" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Upload File
-                </TabsTrigger>
-              </TabsList>
+          {!jsonData ? (
+            <>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Load Cost Center Data
+                </CardTitle>
+                <CardDescription>
+                  Fetch data directly from GitHub API or upload a JSON file containing cost center data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="api" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="api" className="flex items-center gap-2">
+                      <CloudArrowDown className="h-4 w-4" />
+                      GitHub API
+                    </TabsTrigger>
+                    <TabsTrigger value="file" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Upload File
+                    </TabsTrigger>
+                  </TabsList>
 
-              {/* GitHub API Tab */}
-              <TabsContent value="api" className="space-y-4">
-                {!apiConfig ? (
-                  <div className="space-y-4">
-                    <Alert>
-                      <Key className="h-4 w-4" />
-                      <AlertDescription>
-                        Configure your GitHub credentials to fetch cost center data directly from the API.
-                        You'll need a personal access token with `manage_billing:enterprise` scope.
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">
-                          GitHub Personal Access Token
-                        </label>
-                        <Input
-                          type="password"
-                          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                          value={tempToken}
-                          onChange={(e) => setTempToken(e.target.value)}
-                          className="font-mono"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Required scopes: manage_billing:enterprise
-                        </p>
+                  {/* GitHub API Tab */}
+                  <TabsContent value="api" className="space-y-4">
+                    {!apiConfig ? (
+                      <div className="space-y-4">
+                        <Alert>
+                          <Key className="h-4 w-4" />
+                          <AlertDescription>
+                            Configure your GitHub credentials to fetch cost center data directly from the API.
+                            You'll need a personal access token with `manage_billing:enterprise` scope.
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-2 block">
+                              GitHub Personal Access Token
+                            </label>
+                            <Input
+                              type="password"
+                              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                              value={tempToken}
+                              onChange={(e) => setTempToken(e.target.value)}
+                              className="font-mono"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Required scopes: manage_billing:enterprise
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-2 block">
+                              Enterprise Slug
+                            </label>
+                            <Input
+                              placeholder="your-enterprise"
+                              value={tempEnterprise}
+                              onChange={(e) => setTempEnterprise(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Found in your enterprise URL
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <Button onClick={saveAPIConfig} className="flex items-center gap-2">
+                          <Key className="h-4 w-4" />
+                          Save Configuration
+                        </Button>
                       </div>
-                      
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">
-                          Enterprise Slug
-                        </label>
-                        <Input
-                          placeholder="your-enterprise"
-                          value={tempEnterprise}
-                          onChange={(e) => setTempEnterprise(e.target.value)}
+                    ) : (
+                      <div className="space-y-4">
+                        <Alert>
+                          <CheckCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <div className="flex items-center gap-3">
+                          <Button 
+                            onClick={fetchFromAPI} 
+                            disabled={isLoading}
+                            className="flex items-center gap-2"
+                          >
+                            <CloudArrowDown className="h-4 w-4" />
+                            {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
+                          </Button>
+                          
+                          <Button variant="outline" onClick={clearAPIConfig}>
+                            Clear Configuration
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* File Upload Tab */}
+                  <TabsContent value="file" className="space-y-4">
+                    <div className="flex items-center justify-center w-full">
+                      <div
+                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                          isDragOver 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-border hover:bg-muted/50'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() => document.getElementById('file-upload')?.click()}
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <p className="mb-2 text-sm text-muted-foreground">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-muted-foreground">JSON files only</p>
+                        </div>
+                        <input
+                          id="file-upload"
+                          type="file"
+                          className="hidden"
+                          accept=".json"
+                          onChange={handleFileUpload}
+                          disabled={isLoading}
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Found in your enterprise URL
-                        </p>
                       </div>
                     </div>
                     
-                    <Button onClick={saveAPIConfig} className="flex items-center gap-2">
-                      <Key className="h-4 w-4" />
-                      Save Configuration
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
+                      <Button 
+                        onClick={loadExampleData} 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        disabled={isLoading}
+                      >
+                        <Database className="h-4 w-4" />
+                        Load Example Data
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                
+                {error && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg">Data Loaded Successfully</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setJsonData(null)
+                        setError('')
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Load New Data
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Alert>
-                      <CheckCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <div className="flex items-center gap-3">
-                      <Button 
-                        onClick={fetchFromAPI} 
-                        disabled={isLoading}
-                        className="flex items-center gap-2"
-                      >
-                        <CloudArrowDown className="h-4 w-4" />
-                        {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
-                      </Button>
-                      
-                      <Button variant="outline" onClick={clearAPIConfig}>
-                        Clear Configuration
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* File Upload Tab */}
-              <TabsContent value="file" className="space-y-4">
-                <div className="flex items-center justify-center w-full">
-                  <div
-                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      isDragOver 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border hover:bg-muted/50'
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <p className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-xs text-muted-foreground">JSON files only</p>
-                    </div>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      className="hidden"
-                      accept=".json"
-                      onChange={handleFileUpload}
-                      disabled={isLoading}
-                    />
-                  </div>
                 </div>
-                
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
-                  <Button 
-                    onClick={loadExampleData} 
-                    variant="outline" 
-                    className="flex items-center gap-2"
-                    disabled={isLoading}
-                  >
-                    <Database className="h-4 w-4" />
-                    Load Example Data
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
-            {error && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground">
+                  Found {jsonData.activeCostCenters.length} active and {jsonData.deletedCostCenters.length} deleted cost centers. 
+                  {apiConfig && (
+                    <span className="ml-1">Loaded from GitHub API for enterprise: <code className="font-mono text-xs">{apiConfig.enterprise}</code></span>
+                  )}
+                </p>
+              </CardContent>
+            </>
+          )}
         </Card>
 
         {/* Results Section */}
