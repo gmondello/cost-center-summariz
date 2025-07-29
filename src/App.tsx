@@ -780,14 +780,14 @@ function App() {
                               />
                               <p className="text-xs text-muted-foreground mt-1">
                                 For data residency enterprises only. 
-                                <a 
-                                  href="https://docs.github.com/en/enterprise-cloud@latest/admin/data-residency/about-github-enterprise-cloud-with-data-residency#api-access" 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="text-primary hover:underline ml-1"
-                                >
-                                  Learn more
-                                </a>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
+                          <Key className="h-4 w-4" />
+                          {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
                               </p>
                             </div>
                           </div>
