@@ -42,6 +42,7 @@ interface ParsedData {
 interface GitHubAPIConfig {
   token: string
   enterprise: string
+  baseUrl?: string // For data residency enterprises
 }
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
   const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
+  const [tempBaseUrl, setTempBaseUrl] = useState('')
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,7 +75,11 @@ function App() {
     setError('')
 
     try {
-      const response = await fetch(`https://api.github.com/enterprises/${apiConfig.enterprise}/settings/billing/cost-centers`, {
+      // Use custom base URL for data residency or default to api.github.com
+      const baseUrl = apiConfig.baseUrl || 'https://api.github.com'
+      const apiUrl = `${baseUrl}/enterprises/${apiConfig.enterprise}/settings/billing/cost-centers`
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `token ${apiConfig.token}`,
           'Accept': 'application/vnd.github+json',
@@ -124,7 +130,8 @@ function App() {
     
     const newConfig = {
       token: tempToken.trim(),
-      enterprise: tempEnterprise.trim()
+      enterprise: tempEnterprise.trim(),
+      baseUrl: tempBaseUrl.trim() || undefined // Only include if provided
     }
     
     // Save the configuration
@@ -133,12 +140,17 @@ function App() {
     // Clear temporary values for security
     setTempToken('')
     setTempEnterprise('')
+    setTempBaseUrl('')
     
     toast.success('Configuration saved! Fetching data...')
 
     // Immediately fetch data with the new configuration
     try {
-      const response = await fetch(`https://api.github.com/enterprises/${newConfig.enterprise}/settings/billing/cost-centers`, {
+      // Use custom base URL for data residency or default to api.github.com
+      const baseUrl = newConfig.baseUrl || 'https://api.github.com'
+      const apiUrl = `${baseUrl}/enterprises/${newConfig.enterprise}/settings/billing/cost-centers`
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `token ${newConfig.token}`,
           'Accept': 'application/vnd.github+json',
@@ -175,6 +187,7 @@ function App() {
     setApiConfig(null)
     setTempToken('')
     setTempEnterprise('')
+    setTempBaseUrl('')
     setError('') // Clear any error messages
     toast.success('API configuration cleared')
   }
@@ -716,7 +729,7 @@ function App() {
                           </AlertDescription>
                         </Alert>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
                           <div>
                             <label className="text-sm font-medium text-foreground mb-2 block">
                               GitHub Personal Access Token
@@ -733,18 +746,34 @@ function App() {
                             </p>
                           </div>
                           
-                          <div>
-                            <label className="text-sm font-medium text-foreground mb-2 block">
-                              Enterprise Slug
-                            </label>
-                            <Input
-                              placeholder="your-enterprise"
-                              value={tempEnterprise}
-                              onChange={(e) => setTempEnterprise(e.target.value)}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Found in your enterprise URL
-                            </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-foreground mb-2 block">
+                                Enterprise Slug
+                              </label>
+                              <Input
+                                placeholder="your-enterprise"
+                                value={tempEnterprise}
+                                onChange={(e) => setTempEnterprise(e.target.value)}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Found in your enterprise URL
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium text-foreground mb-2 block">
+                                API Base URL (Optional)
+                              </label>
+                              <Input
+                                placeholder="https://api.github.com"
+                                value={tempBaseUrl}
+                                onChange={(e) => setTempBaseUrl(e.target.value)}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                For data residency enterprises only
+                              </p>
+                            </div>
                           </div>
                         </div>
                         
@@ -759,6 +788,11 @@ function App() {
                           <CheckCircle className="h-4 w-4" />
                           <AlertDescription>
                             API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
+                            {apiConfig.baseUrl && (
+                              <span className="block mt-1">
+                                Base URL: <code className="font-mono">{apiConfig.baseUrl}</code>
+                              </span>
+                            )}
                           </AlertDescription>
                         </Alert>
                         
@@ -850,7 +884,14 @@ function App() {
                 <p className="text-sm text-muted-foreground">
                   Found {jsonData.activeCostCenters.length} active and {jsonData.deletedCostCenters.length} deleted cost centers. 
                   {apiConfig && (
-                    <span className="ml-1">Loaded from GitHub API for enterprise: <code className="font-mono text-xs">{apiConfig.enterprise}</code></span>
+                    <span className="ml-1">
+                      Loaded from GitHub API for enterprise: <code className="font-mono text-xs">{apiConfig.enterprise}</code>
+                      {apiConfig.baseUrl && (
+                        <span className="ml-1">
+                          via <code className="font-mono text-xs">{apiConfig.baseUrl}</code>
+                        </span>
+                      )}
+                    </span>
                   )}
                 </p>
               </CardContent>
@@ -1202,6 +1243,14 @@ function App() {
                     <h4 className="font-medium text-sm mb-2">3. Find Your Enterprise Slug</h4>
                     <p className="text-sm text-muted-foreground">
                       This is the name in your enterprise URL: <code className="bg-muted px-1 rounded text-xs">https://github.com/enterprises/YOUR-ENTERPRISE-SLUG</code>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">4. Data Residency Enterprises (Optional)</h4>
+                    <p className="text-sm text-muted-foreground">
+                      If your enterprise uses data residency, provide your custom API base URL (e.g., <code className="bg-muted px-1 rounded text-xs">https://api.eu-central-1.ghe.com</code>). 
+                      Leave blank for standard GitHub.com enterprises.
                     </p>
                   </div>
                 </div>
