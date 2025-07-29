@@ -742,21 +742,6 @@ function App() {
                   <TabsContent value="api" className="space-y-4">
                     {!apiConfig || isEditingConfig ? (
                       <div className="space-y-4">
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-foreground mb-2 block">
-                              GitHub Personal Access Token
-                            </label>
-                            <Input
-                              type="password"
-                              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                              value={tempToken}
-                              onChange={(e) => setTempToken(e.target.value)}
-                              className="font-mono"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Required scopes: manage_billing:enterprise
-                            </p>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
