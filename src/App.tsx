@@ -639,8 +639,15 @@ function App() {
       <div className="container mx-auto p-6 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
-          <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
+              <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+            </div>
+            <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium">
+              Prototype
+            </Badge>
+          </div>
         </div>
 
         {/* Upload Section */}
