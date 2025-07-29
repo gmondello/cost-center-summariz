@@ -657,6 +657,23 @@ function App() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6 flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Don't have cost center data yet?</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try the application with sample data to explore features</p>
+                  </div>
+                  <Button 
+                    onClick={loadExampleData} 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-2"
+                    disabled={isLoading}
+                  >
+                    <Database className="h-4 w-4" />
+                    Load Example Data
+                  </Button>
+                </div>
+
                 <Tabs defaultValue="api" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="api" className="flex items-center gap-2">
@@ -775,19 +792,6 @@ function App() {
                           disabled={isLoading}
                         />
                       </div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-3">Or try the application with sample data:</p>
-                      <Button 
-                        onClick={loadExampleData} 
-                        variant="outline" 
-                        className="flex items-center gap-2"
-                        disabled={isLoading}
-                      >
-                        <Database className="h-4 w-4" />
-                        Load Example Data
-                      </Button>
                     </div>
                   </TabsContent>
                 </Tabs>
