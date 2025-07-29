@@ -652,7 +652,7 @@ function App() {
                     Prototype
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent className="bg-background border border-border shadow-sm text-foreground max-w-60" sideOffset={5}>
+                <TooltipContent className="bg-background border border-border shadow-sm text-foreground max-w-72" sideOffset={5}>
                   <p className="text-sm">
                     This prototype is a standalone utility and is not covered by GitHub's terms and conditions. Use at your own risk.
                   </p>
