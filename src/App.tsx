@@ -648,12 +648,12 @@ function App() {
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium cursor-help">
+                  <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium">
                     Prototype
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent className="bg-background border border-border shadow-sm text-foreground">
-                  <p className="max-w-xs text-sm">
+                <TooltipContent className="bg-background border border-border shadow-sm text-foreground" sideOffset={5}>
+                  <p className="text-sm">
                     This prototype is a standalone utility and is not covered by GitHub's terms and conditions. Use at your own risk.
                   </p>
                 </TooltipContent>
