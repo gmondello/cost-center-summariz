@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, PencilSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -57,6 +57,7 @@ function App() {
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
+  const [isEditingConfig, setIsEditingConfig] = useState(false)
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -141,6 +142,7 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setIsEditingConfig(false)
     
     toast.success('Configuration saved! Fetching data...')
 
@@ -188,8 +190,27 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setIsEditingConfig(false)
     setError('') // Clear any error messages
     toast.success('API configuration cleared')
+  }
+
+  const editAPIConfig = () => {
+    if (apiConfig) {
+      setTempToken(apiConfig.token)
+      setTempEnterprise(apiConfig.enterprise)
+      setTempBaseUrl(apiConfig.baseUrl || '')
+    }
+    setIsEditingConfig(true)
+    setError('') // Clear any error messages
+  }
+
+  const cancelEditConfig = () => {
+    setTempToken('')
+    setTempEnterprise('')
+    setTempBaseUrl('')
+    setIsEditingConfig(false)
+    setError('') // Clear any error messages
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -719,7 +740,7 @@ function App() {
 
                   {/* GitHub API Tab */}
                   <TabsContent value="api" className="space-y-4">
-                    {!apiConfig ? (
+                    {!apiConfig || isEditingConfig ? (
                       <div className="space-y-4">
                         <Alert>
                           <Key className="h-4 w-4" />
@@ -784,10 +805,18 @@ function App() {
                           </div>
                         </div>
                         
-                        <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
-                          <Key className="h-4 w-4" />
-                          {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
+                            <Key className="h-4 w-4" />
+                            {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
+                          </Button>
+                          
+                          {isEditingConfig && (
+                            <Button variant="outline" onClick={cancelEditConfig}>
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -811,6 +840,11 @@ function App() {
                           >
                             <CloudArrowDown className="h-4 w-4" />
                             {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
+                          </Button>
+                          
+                          <Button variant="outline" onClick={editAPIConfig} className="flex items-center gap-2">
+                            <PencilSimple className="h-4 w-4" />
+                            Edit Configuration
                           </Button>
                           
                           <Button variant="outline" onClick={clearAPIConfig}>
