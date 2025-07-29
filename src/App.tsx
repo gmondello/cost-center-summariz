@@ -726,6 +726,14 @@ function App() {
                           <AlertDescription>
                             Configure your GitHub credentials to fetch cost center data directly from the API.
                             You'll need a personal access token with `manage_billing:enterprise` scope.
+                            <a 
+                              href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic" 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-primary hover:underline ml-1"
+                            >
+                              Learn how to create a token
+                            </a>
                           </AlertDescription>
                         </Alert>
                         
@@ -771,7 +779,15 @@ function App() {
                                 onChange={(e) => setTempBaseUrl(e.target.value)}
                               />
                               <p className="text-xs text-muted-foreground mt-1">
-                                For data residency enterprises only
+                                For data residency enterprises only. 
+                                <a 
+                                  href="https://docs.github.com/en/enterprise-cloud@latest/admin/data-residency/about-github-enterprise-cloud-with-data-residency#api-access" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-primary hover:underline ml-1"
+                                >
+                                  Learn more
+                                </a>
                               </p>
                             </div>
                           </div>
@@ -1228,7 +1244,15 @@ function App() {
                   <div>
                     <h4 className="font-medium text-sm mb-2">1. Create a Personal Access Token</h4>
                     <p className="text-sm text-muted-foreground">
-                      Go to GitHub �� Settings → Developer settings → Personal access tokens → Tokens (classic)
+                      Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic). 
+                      <a 
+                        href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:underline ml-1"
+                      >
+                        Step-by-step guide
+                      </a>
                     </p>
                   </div>
                   
@@ -1242,7 +1266,15 @@ function App() {
                   <div>
                     <h4 className="font-medium text-sm mb-2">3. Find Your Enterprise Slug</h4>
                     <p className="text-sm text-muted-foreground">
-                      This is the name in your enterprise URL: <code className="bg-muted px-1 rounded text-xs">https://github.com/enterprises/YOUR-ENTERPRISE-SLUG</code>
+                      This is the name in your enterprise URL: <code className="bg-muted px-1 rounded text-xs">https://github.com/enterprises/YOUR-ENTERPRISE-SLUG</code>. 
+                      <a 
+                        href="https://docs.github.com/en/enterprise-cloud@latest/admin/overview/about-enterprise-accounts#about-enterprise-accounts" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:underline ml-1"
+                      >
+                        Learn about enterprise accounts
+                      </a>
                     </p>
                   </div>
                   
@@ -1250,7 +1282,15 @@ function App() {
                     <h4 className="font-medium text-sm mb-2">4. Data Residency Enterprises (Optional)</h4>
                     <p className="text-sm text-muted-foreground">
                       If your enterprise uses data residency, provide your custom API base URL (e.g., <code className="bg-muted px-1 rounded text-xs">https://api.eu-central-1.ghe.com</code>). 
-                      Leave blank for standard GitHub.com enterprises.
+                      Leave blank for standard GitHub.com enterprises. 
+                      <a 
+                        href="https://docs.github.com/en/enterprise-cloud@latest/admin/data-residency/about-github-enterprise-cloud-with-data-residency#api-access" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:underline ml-1"
+                      >
+                        View data residency documentation
+                      </a>
                     </p>
                   </div>
                 </div>
