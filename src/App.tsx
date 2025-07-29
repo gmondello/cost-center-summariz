@@ -786,7 +786,6 @@ function App() {
                               </p>
                             </div>
                           </div>
-                        </div>
                         
                         <div className="flex items-center gap-3">
                           <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
