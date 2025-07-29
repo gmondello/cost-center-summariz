@@ -621,6 +621,7 @@ function App() {
       
       const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n')
       const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.csv`
