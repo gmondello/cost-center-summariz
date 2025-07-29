@@ -1176,7 +1176,7 @@ function App() {
                   <div>
                     <h4 className="font-medium text-sm mb-2">1. Create a Personal Access Token</h4>
                     <p className="text-sm text-muted-foreground">
-                      Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+                      Go to GitHub �� Settings → Developer settings → Personal access tokens → Tokens (classic)
                     </p>
                   </div>
                   
