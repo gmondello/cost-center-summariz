@@ -1205,7 +1205,17 @@ function App() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">Your JSON should contain cost center data exactly matching the GitHub API schema:</p>
+                <p className="text-muted-foreground mb-4">
+                  Your JSON should contain cost center data exactly matching the GitHub API schema. 
+                  This data is retrieved using the <a 
+                    href="https://docs.github.com/en/enterprise-cloud@latest/rest/enterprise-admin/billing?apiVersion=2022-11-28#get-all-cost-centers-for-an-enterprise" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-primary hover:underline"
+                  >
+                    Get All Cost Centers API
+                  </a>.
+                </p>
                 <div className="bg-muted p-4 rounded-lg">
                   <pre className="text-sm text-muted-foreground overflow-x-auto">
 {`{
