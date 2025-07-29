@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
@@ -635,20 +636,30 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans">
-      <div className="container mx-auto p-6 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
-              <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+    <TooltipProvider>
+      <div className="min-h-screen bg-background font-sans">
+        <div className="container mx-auto p-6 max-w-6xl">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
+                <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium cursor-help">
+                    Prototype
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-sm">
+                    This prototype is a standalone utility and is not covered by GitHub's terms and conditions. Use at your own risk.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-            <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium">
-              Prototype
-            </Badge>
           </div>
-        </div>
 
         {/* Upload Section */}
         <Card className="mb-6">
@@ -1262,6 +1273,7 @@ function App() {
         )}
       </div>
     </div>
+    </TooltipProvider>
   )
 }
 
