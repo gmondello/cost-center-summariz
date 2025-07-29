@@ -788,14 +788,6 @@ function App() {
                         <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
                           <Key className="h-4 w-4" />
                           {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
-                          <Key className="h-4 w-4" />
-                          {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
                         </Button>
                       </div>
                     ) : (
