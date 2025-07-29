@@ -742,9 +742,22 @@ function App() {
                   <TabsContent value="api" className="space-y-4">
                     {!apiConfig || isEditingConfig ? (
                       <div className="space-y-4">
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            Personal Access Token
+                          </label>
+                          <Input
+                            type="password"
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                            value={tempToken}
+                            onChange={(e) => setTempToken(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Classic token with manage_billing:enterprise scope
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="text-sm font-medium text-foreground mb-2 block">
                                 Enterprise Slug
