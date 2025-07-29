@@ -603,11 +603,14 @@ function App() {
         'Organizations',
         'Repositories',
         'Members'
+      ]
+      
       const rows = jsonData.costCenters.map(center => {
         const { orgs, repos, members } = getResourceCounts(center)
         
         return [
           `"${center.name}"`,
+          center.id,
           center.state,
           center.resources.length,
           orgs,
@@ -616,8 +619,8 @@ function App() {
         ]
       })
       
-          members
-      const url = URL.createObjectURL(blob)
+      const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
       const a = document.createElement('a')
       a.href = url
       a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.csv`
