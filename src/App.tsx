@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -568,29 +569,79 @@ function App() {
 
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || sortBy !== 'name'
 
-  const exportReport = () => {
+  const exportReport = (format: 'json' | 'csv') => {
     if (!jsonData) return
     
-    const reportData = {
-      generatedAt: new Date().toISOString(),
-      summary: jsonData.summary,
-      costCenters: jsonData.costCenters.map(center => ({
-        ...center,
-        resourceCounts: getResourceCounts(center)
-      }))
+    if (format === 'json') {
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        summary: jsonData.summary,
+        costCenters: jsonData.costCenters.map(center => ({
+          ...center,
+          resourceCounts: getResourceCounts(center)
+        }))
+      }
+      
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      toast.success('JSON report exported successfully!')
+    } else if (format === 'csv') {
+      // Create CSV headers
+      const headers = [
+        'Cost Center Name',
+        'Cost Center ID',
+        'State',
+        'Total Resources',
+        'Organizations',
+        'Repositories',
+        'Members',
+        'Organization Names',
+        'Repository Names',
+        'Member Names'
+      ]
+      
+      // Create CSV rows
+      const rows = jsonData.costCenters.map(center => {
+        const { orgs, repos, members } = getResourceCounts(center)
+        const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
+        
+        return [
+          `"${center.name}"`,
+          center.id,
+          center.state,
+          center.resources.length,
+          orgs,
+          repos,
+          members,
+          `"${orgList.map(o => o.name).join(', ')}"`,
+          `"${repoList.map(r => r.name).join(', ')}"`,
+          `"${userList.map(u => u.name).join(', ')}"` 
+        ]
+      })
+      
+      // Combine headers and rows
+      const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n')
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      toast.success('CSV report exported successfully!')
     }
-    
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    toast.success('Report exported successfully!')
   }
 
   return (
@@ -852,10 +903,25 @@ function App() {
                   <CardTitle>Resource Summary</CardTitle>
                   <CardDescription>Overview of organizations, repositories, and members across active cost centers</CardDescription>
                 </div>
-                <Button onClick={exportReport} className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Export Report
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Export Report
+                      <CaretDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => exportReport('json')}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Export as JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => exportReport('csv')}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export as CSV
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
