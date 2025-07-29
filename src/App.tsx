@@ -701,7 +701,7 @@ function App() {
                     onClick={loadExampleData} 
                     variant="outline" 
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-xs"
                     disabled={isLoading}
                   >
                     <Database className="h-4 w-4" />
