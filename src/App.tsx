@@ -40,7 +40,6 @@ interface ParsedData {
 }
 
 interface GitHubAPIConfig {
-  token: string
   enterprise: string
   baseUrl?: string // For data residency enterprises
 }
@@ -52,11 +51,14 @@ function App() {
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState(false)
   
-  // API Configuration - persisted in KV store
+  // API Configuration - persisted in KV store (no token stored)
   const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
+  
+  // Token stored only in memory (not persisted)
+  const [currentToken, setCurrentToken] = useState('')
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -65,7 +67,7 @@ function App() {
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
 
   const fetchFromAPI = async () => {
-    if (!apiConfig?.token || !apiConfig?.enterprise) {
+    if (!currentToken || !apiConfig?.enterprise) {
       setError('Please configure your GitHub API token and enterprise slug first')
       toast.error('API configuration required')
       return
@@ -81,7 +83,7 @@ function App() {
       
       const response = await fetch(apiUrl, {
         headers: {
-          'Authorization': `token ${apiConfig.token}`,
+          'Authorization': `token ${currentToken}`,
           'Accept': 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28'
         }
@@ -129,13 +131,15 @@ function App() {
     setIsLoading(true)
     
     const newConfig = {
-      token: tempToken.trim(),
       enterprise: tempEnterprise.trim(),
       baseUrl: tempBaseUrl.trim() || undefined // Only include if provided
     }
     
-    // Save the configuration
+    // Save the configuration (without token)
     setApiConfig(newConfig)
+    
+    // Store token in memory only
+    setCurrentToken(tempToken.trim())
     
     // Clear temporary values for security
     setTempToken('')
@@ -152,7 +156,7 @@ function App() {
       
       const response = await fetch(apiUrl, {
         headers: {
-          'Authorization': `token ${newConfig.token}`,
+          'Authorization': `token ${tempToken.trim()}`,
           'Accept': 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28'
         }
@@ -185,6 +189,7 @@ function App() {
 
   const clearAPIConfig = () => {
     setApiConfig(null)
+    setCurrentToken('') // Clear token from memory
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
@@ -800,6 +805,9 @@ function App() {
                                 Base URL: <code className="font-mono">{apiConfig.baseUrl}</code>
                               </span>
                             )}
+                            <span className="block mt-1 text-xs text-muted-foreground">
+                              Token stored securely in memory only
+                            </span>
                           </AlertDescription>
                         </Alert>
                         
@@ -1289,7 +1297,7 @@ function App() {
                 <Alert>
                   <Key className="h-4 w-4" />
                   <AlertDescription>
-                    Your token and enterprise configuration are securely stored locally and never shared.
+                    Your token is stored securely in memory only and never persisted to disk. Enterprise configuration is saved locally for convenience.
                   </AlertDescription>
                 </Alert>
               </CardContent>
