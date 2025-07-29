@@ -725,21 +725,6 @@ function App() {
                   <TabsContent value="api" className="space-y-4">
                     {!apiConfig ? (
                       <div className="space-y-4">
-                        <Alert>
-                          <Key className="h-4 w-4" />
-                          <AlertDescription>
-                            Configure your GitHub credentials to fetch cost center data directly from the API.
-                            You'll need a personal access token with `manage_billing:enterprise` scope. <a 
-                              href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-primary hover:underline ml-1"
-                            >
-                              Learn how to create a token
-                            </a>
-                          </AlertDescription>
-                        </Alert>
-                        
                         <div className="space-y-4">
                           <div>
                             <label className="text-sm font-medium text-foreground mb-2 block">
