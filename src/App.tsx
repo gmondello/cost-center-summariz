@@ -602,16 +602,12 @@ function App() {
         'Total Resources',
         'Organizations',
         'Repositories',
-        'Members',
-        'Organization Names',
-        'Repository Names',
-        'Member Names'
+        'Members'
       ]
       
       // Create CSV rows
       const rows = jsonData.costCenters.map(center => {
         const { orgs, repos, members } = getResourceCounts(center)
-        const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
         
         return [
           `"${center.name}"`,
@@ -620,10 +616,7 @@ function App() {
           center.resources.length,
           orgs,
           repos,
-          members,
-          `"${orgList.map(o => o.name).join(', ')}"`,
-          `"${repoList.map(r => r.name).join(', ')}"`,
-          `"${userList.map(u => u.name).join(', ')}"` 
+          members
         ]
       })
       
