@@ -640,7 +640,7 @@ function App() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
-          <p className="text-muted-foreground">Upload JSON or connect to GitHub to get reports, search cost center names, and find cost center members</p>
+          <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON results to search cost center names and members and get reports</p>
         </div>
 
         {/* Upload Section */}
