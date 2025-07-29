@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, PencilSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -56,6 +56,7 @@ function App() {
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
+  const [isEditingConfig, setIsEditingConfig] = useState(false)
   
   // Token stored only in memory (not persisted)
   const [currentToken, setCurrentToken] = useState('')
@@ -145,6 +146,7 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setIsEditingConfig(false)
     
     toast.success('Configuration saved! Fetching data...')
 
@@ -193,8 +195,27 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setIsEditingConfig(false)
     setError('') // Clear any error messages
     toast.success('API configuration cleared')
+  }
+
+  const editAPIConfig = () => {
+    if (apiConfig) {
+      setTempToken(apiConfig.token)
+      setTempEnterprise(apiConfig.enterprise)
+      setTempBaseUrl(apiConfig.baseUrl || '')
+    }
+    setIsEditingConfig(true)
+    setError('') // Clear any error messages
+  }
+
+  const cancelEditConfig = () => {
+    setTempToken('')
+    setTempEnterprise('')
+    setTempBaseUrl('')
+    setIsEditingConfig(false)
+    setError('') // Clear any error messages
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -702,7 +723,7 @@ function App() {
                     onClick={loadExampleData} 
                     variant="outline" 
                     size="sm"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-xs"
                     disabled={isLoading}
                   >
                     <Database className="h-4 w-4" />
@@ -724,41 +745,24 @@ function App() {
 
                   {/* GitHub API Tab */}
                   <TabsContent value="api" className="space-y-4">
-                    {!apiConfig ? (
+                    {!apiConfig || isEditingConfig ? (
                       <div className="space-y-4">
-                        <Alert>
-                          <Key className="h-4 w-4" />
-                          <AlertDescription>
-                            Configure your GitHub credentials to fetch cost center data directly from the API.
-                            You'll need a personal access token with `manage_billing:enterprise` scope. <a 
-                              href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic" 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-primary hover:underline ml-1"
-                            >
-                              Learn how to create a token
-                            </a>
-                          </AlertDescription>
-                        </Alert>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">
+                            Personal Access Token
+                          </label>
+                          <Input
+                            type="password"
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                            value={tempToken}
+                            onChange={(e) => setTempToken(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Classic token with manage_billing:enterprise scope
+                          </p>
+                        </div>
                         
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-foreground mb-2 block">
-                              GitHub Personal Access Token
-                            </label>
-                            <Input
-                              type="password"
-                              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                              value={tempToken}
-                              onChange={(e) => setTempToken(e.target.value)}
-                              className="font-mono"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Required scopes: manage_billing:enterprise
-                            </p>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="text-sm font-medium text-foreground mb-2 block">
                                 Enterprise Slug
@@ -787,12 +791,19 @@ function App() {
                               </p>
                             </div>
                           </div>
-                        </div>
                         
-                        <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
-                          <Key className="h-4 w-4" />
-                          {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
+                            <Key className="h-4 w-4" />
+                            {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
+                          </Button>
+                          
+                          {isEditingConfig && (
+                            <Button variant="outline" onClick={cancelEditConfig}>
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -819,6 +830,11 @@ function App() {
                           >
                             <CloudArrowDown className="h-4 w-4" />
                             {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
+                          </Button>
+                          
+                          <Button variant="outline" onClick={editAPIConfig} className="flex items-center gap-2">
+                            <PencilSimple className="h-4 w-4" />
+                            Edit Configuration
                           </Button>
                           
                           <Button variant="outline" onClick={clearAPIConfig}>
