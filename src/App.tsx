@@ -64,6 +64,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'Org' | 'Repo' | 'User'>('all')
   const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
+  const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
 
   const fetchFromAPI = async () => {
@@ -532,7 +533,17 @@ function App() {
   const filteredAndSortedCostCenters = useMemo(() => {
     if (!jsonData) return []
 
-    let filtered = jsonData.activeCostCenters.filter(center => {
+    // First filter by state (active/deleted/all)
+    let baseList: CostCenter[] = []
+    if (stateFilter === 'active') {
+      baseList = jsonData.activeCostCenters
+    } else if (stateFilter === 'deleted') {
+      baseList = jsonData.deletedCostCenters
+    } else {
+      baseList = jsonData.costCenters
+    }
+
+    let filtered = baseList.filter(center => {
       // Search filter - check cost center name, ID, and resource names
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch = !searchQuery || 
@@ -576,16 +587,17 @@ function App() {
     })
 
     return filtered
-  }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, sortBy])
+  }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
   const clearFilters = () => {
     setSearchQuery('')
     setResourceTypeFilter('all')
     setHasResourcesFilter('all')
+    setStateFilter('active')
     setSortBy('name')
   }
 
-  const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || sortBy !== 'name'
+  const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
 
   const exportReport = (format: 'json' | 'csv') => {
     if (!jsonData) return
@@ -995,9 +1007,17 @@ function App() {
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>Active Cost Centers - Resource Breakdown</CardTitle>
+                    <CardTitle>
+                      {stateFilter === 'active' ? 'Active Cost Centers' : 
+                       stateFilter === 'deleted' ? 'Deleted Cost Centers' : 
+                       'All Cost Centers'} - Resource Breakdown
+                    </CardTitle>
                     <CardDescription>
-                      {filteredAndSortedCostCenters.length} of {jsonData.activeCostCenters.length} cost centers
+                      {filteredAndSortedCostCenters.length} of {
+                        stateFilter === 'active' ? jsonData.activeCostCenters.length :
+                        stateFilter === 'deleted' ? jsonData.deletedCostCenters.length :
+                        jsonData.costCenters.length
+                      } cost centers
                       {hasActiveFilters && ' (filtered)'}
                     </CardDescription>
                   </div>
@@ -1027,6 +1047,18 @@ function App() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-4">
+                    {/* State Filter */}
+                    <Select value={stateFilter} onValueChange={(value: any) => setStateFilter(value)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active Only</SelectItem>
+                        <SelectItem value="deleted">Deleted Only</SelectItem>
+                        <SelectItem value="all">All States</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
                     {/* Resource Type Filter */}
                     <div className="flex items-center gap-2">
                       <FunnelSimple className="h-4 w-4 text-muted-foreground" />
@@ -1182,7 +1214,11 @@ function App() {
                     )
                   })}
                   
-                  {filteredAndSortedCostCenters.length === 0 && jsonData.activeCostCenters.length > 0 && (
+                  {filteredAndSortedCostCenters.length === 0 && (
+                    stateFilter === 'active' ? jsonData.activeCostCenters.length :
+                    stateFilter === 'deleted' ? jsonData.deletedCostCenters.length :
+                    jsonData.costCenters.length
+                  ) > 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">
                       <div className="space-y-2">
                         <MagnifyingGlass className="h-8 w-8 mx-auto text-muted-foreground/50" />
@@ -1194,9 +1230,13 @@ function App() {
                     </div>
                   )}
                   
-                  {jsonData.activeCostCenters.length === 0 && (
+                  {(
+                    stateFilter === 'active' ? jsonData.activeCostCenters.length :
+                    stateFilter === 'deleted' ? jsonData.deletedCostCenters.length :
+                    jsonData.costCenters.length
+                  ) === 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">
-                      No active cost centers found
+                      No {stateFilter === 'active' ? 'active' : stateFilter === 'deleted' ? 'deleted' : ''} cost centers found
                     </div>
                   )}
                 </div>
