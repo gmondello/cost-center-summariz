@@ -1,16 +1,4 @@
 {
   "name": "cost-center-analyzer",
-  "description": "Professional theme for cost center analysis application",
-  "colors": {
-    "primary": "oklch(0.65 0.20 160)",
-    "secondary": "oklch(0.92 0.08 200)",
-    "accent": "oklch(0.75 0.15 280)",
-    "background": "oklch(0.98 0.01 180)",
-    "foreground": "oklch(0.15 0.02 240)"
-  },
-  "fonts": {
-    "sans": "Inter",
-    "serif": "Lora", 
-    "mono": "JetBrains Mono"
-  }
+  "description": "Professional theme for cost center analysis application"
 }
