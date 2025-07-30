@@ -10,7 +10,28 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, ArrowSquareOut } from '@phosphor-icons/react'
+// Primer Octicons
+import { 
+  UploadIcon,
+  FileIcon,
+  DownloadIcon,
+  AlertIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  OrganizationIcon,
+  RepoIcon,
+  PersonIcon,
+  SearchIcon,
+  FilterIcon,
+  XIcon,
+  DatabaseIcon,
+  CloudDownloadIcon,
+  KeyIcon,
+  GlobeIcon,
+  TriangleDownIcon,
+  LinkExternalIcon
+} from '@primer/octicons-react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -690,12 +711,12 @@ function App() {
           <div className="mb-8">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
-                <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+                <h1 className="text-4xl font-semibold text-foreground mb-2">Cost Center Analyzer</h1>
+                <p className="text-base text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium">
+                  <Badge variant="outline" className="border-amber-400 text-amber-800 bg-amber-50 font-medium px-3 py-1">
                     Prototype
                   </Badge>
                 </TooltipTrigger>
@@ -714,7 +735,7 @@ function App() {
             <>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
+                  <UploadIcon size={20} />
                   Load Cost Center Data
                 </CardTitle>
                 <CardDescription>
@@ -722,9 +743,9 @@ function App() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-6 flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+                <div className="mb-6 flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
                   <div>
-                    <p className="text-sm text-muted-foreground">Don't have cost center data yet?</p>
+                    <p className="text-sm font-medium text-muted-foreground">Don't have cost center data yet?</p>
                     <p className="text-xs text-muted-foreground mt-1">Try the application with sample data to explore features</p>
                   </div>
                   <Button 
@@ -734,7 +755,7 @@ function App() {
                     className="flex items-center gap-2 text-xs"
                     disabled={isLoading}
                   >
-                    <Database className="h-4 w-4" />
+                    <DatabaseIcon size={16} />
                     Load Example Data
                   </Button>
                 </div>
@@ -742,11 +763,11 @@ function App() {
                 <Tabs defaultValue="api" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="api" className="flex items-center gap-2">
-                      <CloudArrowDown className="h-4 w-4" />
+                      <CloudDownloadIcon size={16} />
                       GitHub API
                     </TabsTrigger>
                     <TabsTrigger value="file" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
+                      <FileIcon size={16} />
                       Upload File
                     </TabsTrigger>
                   </TabsList>
@@ -765,9 +786,9 @@ function App() {
                               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                               value={tempToken}
                               onChange={(e) => setTempToken(e.target.value)}
-                              className="font-mono"
+                              className="font-mono text-sm"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-2">
                               Required scopes: manage_billing:enterprise
                             </p>
                           </div>
@@ -782,7 +803,7 @@ function App() {
                                 value={tempEnterprise}
                                 onChange={(e) => setTempEnterprise(e.target.value)}
                               />
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 Found in your enterprise URL
                               </p>
                             </div>
@@ -796,7 +817,7 @@ function App() {
                                 value={tempBaseUrl}
                                 onChange={(e) => setTempBaseUrl(e.target.value)}
                               />
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 For data residency enterprises only. 
                               </p>
                             </div>
@@ -804,14 +825,14 @@ function App() {
                         </div>
                         
                         <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
-                          <Key className="h-4 w-4" />
+                          <KeyIcon size={16} />
                           {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <Alert>
-                          <CheckCircle className="h-4 w-4" />
+                          <CheckCircleIcon size={16} />
                           <AlertDescription>
                             API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
                             {apiConfig.baseUrl && (
@@ -828,7 +849,7 @@ function App() {
                             disabled={isLoading}
                             className="flex items-center gap-2"
                           >
-                            <CloudArrowDown className="h-4 w-4" />
+                            <CloudDownloadIcon size={16} />
                             {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
                           </Button>
                           
@@ -855,7 +876,7 @@ function App() {
                         onClick={() => document.getElementById('file-upload')?.click()}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <FileIcon size={32} className={`mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
                           <p className="mb-2 text-sm text-muted-foreground">
                             <span className="font-semibold">Click to upload</span> or drag and drop
                           </p>
@@ -876,7 +897,7 @@ function App() {
                 
                 {error && (
                   <Alert variant="destructive" className="mt-4">
-                    <AlertCircle className="h-4 w-4" />
+                    <AlertIcon size={16} />
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
@@ -887,7 +908,7 @@ function App() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircleIcon size={20} className="text-green-500" />
                     <CardTitle className="text-lg">Data Loaded Successfully</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
@@ -900,7 +921,7 @@ function App() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Upload className="h-4 w-4" />
+                      <UploadIcon size={16} />
                       Load New Data
                     </Button>
                   </div>
@@ -929,46 +950,46 @@ function App() {
         {jsonData && (
           <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-l-4 border-l-primary">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Cost Centers</p>
-                      <p className="text-2xl font-bold text-primary">{jsonData.summary.totalActive}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Active Cost Centers</p>
+                      <p className="text-3xl font-semibold text-primary">{jsonData.summary.totalActive}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-muted-foreground">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Deleted Cost Centers</p>
-                      <p className="text-2xl font-bold text-muted-foreground">{jsonData.summary.totalDeleted}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Deleted Cost Centers</p>
+                      <p className="text-3xl font-semibold text-muted-foreground">{jsonData.summary.totalDeleted}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-accent">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Organizations</p>
-                      <p className="text-2xl font-bold">{formatNumber(jsonData.summary.totalOrganizations)}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Total Organizations</p>
+                      <p className="text-3xl font-semibold text-accent">{formatNumber(jsonData.summary.totalOrganizations)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-foreground">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Repositories</p>
-                      <p className="text-2xl font-bold">{formatNumber(jsonData.summary.totalRepositories)}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Total Repositories</p>
+                      <p className="text-3xl font-semibold text-foreground">{formatNumber(jsonData.summary.totalRepositories)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -985,36 +1006,36 @@ function App() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button className="flex items-center gap-2">
-                      <Download className="h-4 w-4" />
+                      <DownloadIcon size={16} />
                       Export Summary
-                      <CaretDown className="h-4 w-4" />
+                      <TriangleDownIcon size={16} />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => exportReport('json')}>
-                      <FileText className="h-4 w-4 mr-2" />
+                      <FileIcon size={16} className="mr-2" />
                       Export as JSON
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => exportReport('csv')}>
-                      <Download className="h-4 w-4 mr-2" />
+                      <DownloadIcon size={16} className="mr-2" />
                       Export as CSV
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary">{formatNumber(jsonData.summary.totalOrganizations)}</div>
-                    <div className="text-sm text-muted-foreground">Organizations</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="text-center p-6 rounded-lg bg-primary/5">
+                    <div className="text-4xl font-semibold text-primary mb-2">{formatNumber(jsonData.summary.totalOrganizations)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Organizations</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-accent">{formatNumber(jsonData.summary.totalRepositories)}</div>
-                    <div className="text-sm text-muted-foreground">Repositories</div>
+                  <div className="text-center p-6 rounded-lg bg-accent/5">
+                    <div className="text-4xl font-semibold text-accent mb-2">{formatNumber(jsonData.summary.totalRepositories)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Repositories</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">{formatNumber(jsonData.summary.totalMembers)}</div>
-                    <div className="text-sm text-muted-foreground">Members</div>
+                  <div className="text-center p-6 rounded-lg bg-foreground/5">
+                    <div className="text-4xl font-semibold text-foreground mb-2">{formatNumber(jsonData.summary.totalMembers)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Members</div>
                   </div>
                 </div>
               </CardContent>
@@ -1046,7 +1067,7 @@ function App() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Search Input */}
                     <div className="relative flex-1">
-                      <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <SearchIcon size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                       <Input
                         placeholder="Search cost centers, IDs, or resource names..."
                         value={searchQuery}
@@ -1058,7 +1079,7 @@ function App() {
                     {/* Clear Filters Button */}
                     {hasActiveFilters && (
                       <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
-                        <X className="h-4 w-4" />
+                        <XIcon size={16} />
                         Clear Filters
                       </Button>
                     )}
@@ -1079,7 +1100,7 @@ function App() {
                     
                     {/* Resource Type Filter */}
                     <div className="flex items-center gap-2">
-                      <FunnelSimple className="h-4 w-4 text-muted-foreground" />
+                      <FilterIcon size={16} className="text-muted-foreground" />
                       <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(value)}>
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Resource Type" />
@@ -1144,15 +1165,15 @@ function App() {
                                 <div className="flex items-center gap-6">
                                   <div className="flex gap-4 text-sm">
                                     <span className="flex items-center gap-1">
-                                      <Buildings className="h-4 w-4 text-primary" />
+                                      <OrganizationIcon size={16} className="text-primary" />
                                       {formatNumber(orgs)} Orgs
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <GitBranch className="h-4 w-4 text-accent" />
+                                      <RepoIcon size={16} className="text-accent" />
                                       {formatNumber(repos)} Repos
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <User className="h-4 w-4 text-foreground" />
+                                      <PersonIcon size={16} className="text-foreground" />
                                       {formatNumber(members)} Members
                                     </span>
                                   </div>
@@ -1167,14 +1188,14 @@ function App() {
                                         className="text-muted-foreground hover:text-primary transition-colors"
                                         title="Open in GitHub"
                                       >
-                                        <ArrowSquareOut className="h-4 w-4" />
+                                        <LinkExternalIcon size={16} />
                                       </a>
                                     )}
                                     {/* Expand/collapse chevron */}
                                     {isExpanded ? (
-                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                      <ChevronDownIcon size={16} className="text-muted-foreground" />
                                     ) : (
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                      <ChevronRightIcon size={16} className="text-muted-foreground" />
                                     )}
                                   </div>
                                 </div>
@@ -1188,7 +1209,7 @@ function App() {
                               {orgList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <Buildings className="h-4 w-4 text-primary" />
+                                    <OrganizationIcon size={16} className="text-primary" />
                                     Organizations ({orgList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1205,7 +1226,7 @@ function App() {
                               {repoList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <GitBranch className="h-4 w-4 text-accent" />
+                                    <RepoIcon size={16} className="text-accent" />
                                     Repositories ({repoList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1222,7 +1243,7 @@ function App() {
                               {userList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <User className="h-4 w-4 text-foreground" />
+                                    <PersonIcon size={16} className="text-foreground" />
                                     Members ({userList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1255,7 +1276,7 @@ function App() {
                   ) > 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">
                       <div className="space-y-2">
-                        <MagnifyingGlass className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                        <SearchIcon size={32} className="mx-auto text-muted-foreground/50" />
                         <p>No cost centers match your current filters</p>
                         <Button variant="outline" onClick={clearFilters} className="mt-2">
                           Clear Filters
@@ -1285,7 +1306,7 @@ function App() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
+                  <GlobeIcon size={20} />
                   GitHub API Setup Guide
                 </CardTitle>
               </CardHeader>
@@ -1350,7 +1371,7 @@ function App() {
                 </div>
                 
                 <Alert>
-                  <Key className="h-4 w-4" />
+                  <KeyIcon size={16} />
                   <AlertDescription>
                     Your token and enterprise configuration are securely stored locally and never shared.
                   </AlertDescription>
@@ -1361,7 +1382,7 @@ function App() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
+                  <CheckCircleIcon size={20} />
                   Expected JSON Format
                 </CardTitle>
               </CardHeader>
