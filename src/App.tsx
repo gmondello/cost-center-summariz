@@ -1138,21 +1138,7 @@ function App() {
                             >
                               <div className="flex items-center justify-between w-full">
                                 <div className="text-left">
-                                  <div className="flex items-center gap-2">
-                                    <div className="font-medium text-lg">{center.name}</div>
-                                    {getCostCenterGitHubUrl(center.id) && (
-                                      <a
-                                        href={getCostCenterGitHubUrl(center.id)!}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()} // Prevent expanding the collapsible
-                                        className="text-muted-foreground hover:text-primary transition-colors"
-                                        title="Open in GitHub"
-                                      >
-                                        <ArrowSquareOut className="h-4 w-4" />
-                                      </a>
-                                    )}
-                                  </div>
+                                  <div className="font-medium text-lg">{center.name}</div>
                                   <div className="font-mono text-sm text-muted-foreground">{center.id}</div>
                                 </div>
                                 <div className="flex items-center gap-6">
@@ -1170,11 +1156,25 @@ function App() {
                                       {formatNumber(members)} Members
                                     </span>
                                   </div>
-                                  {isExpanded ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                  )}
+                                  <div className="flex items-center gap-3">
+                                    {getCostCenterGitHubUrl(center.id) && (
+                                      <a
+                                        href={getCostCenterGitHubUrl(center.id)!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()} // Prevent expanding the collapsible
+                                        className="text-muted-foreground hover:text-primary transition-colors"
+                                        title="Open in GitHub"
+                                      >
+                                        <ArrowSquareOut className="h-4 w-4" />
+                                      </a>
+                                    )}
+                                    {isExpanded ? (
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </Button>
