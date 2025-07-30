@@ -10,29 +10,29 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-// Primer Octicons
+// Phosphor Icons
 import { 
-  UploadIcon,
-  FileIcon,
-  DownloadIcon,
-  AlertIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  OrganizationIcon,
-  RepoIcon,
-  PersonIcon,
-  SearchIcon,
-  FilterIcon,
-  XIcon,
-  DatabaseIcon,
-  CloudIcon,
-  KeyIcon,
-  GlobeIcon,
-  TriangleDownIcon,
-  LinkExternalIcon,
-  ChevronLeftIcon
-} from '@primer/octicons-react'
+  UploadSimple as UploadIcon,
+  File as FileIcon,
+  Download as DownloadIcon,
+  Warning as AlertIcon,
+  CheckCircle as CheckCircleIcon,
+  CaretDown as ChevronDownIcon,
+  CaretRight as ChevronRightIcon,
+  Users as OrganizationIcon,
+  GitBranch as RepoIcon,
+  User as PersonIcon,
+  MagnifyingGlass as SearchIcon,
+  FunnelSimple as FilterIcon,
+  X as XIcon,
+  Database as DatabaseIcon,
+  Cloud as CloudIcon,
+  Key as KeyIcon,
+  Globe as GlobeIcon,
+  CaretDown as TriangleDownIcon,
+  ArrowSquareOut as LinkExternalIcon,
+  CaretLeft as ChevronLeftIcon
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -1377,64 +1377,6 @@ function App() {
                     </div>
                   )}
 
-                  {/* Pagination Controls */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="text-sm text-muted-foreground">
-                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedCostCenters.length)} of {filteredAndSortedCostCenters.length} cost centers
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className="flex items-center gap-1"
-                        >
-                          <ArrowLeftIcon size={16} />
-                          Previous
-                        </Button>
-                        
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                            let pageNum
-                            if (totalPages <= 5) {
-                              pageNum = i + 1
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i
-                            } else {
-                              pageNum = currentPage - 2 + i
-                            }
-                            
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={currentPage === pageNum ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setCurrentPage(pageNum)}
-                                className="w-8 h-8 p-0"
-                              >
-                                {pageNum}
-                              </Button>
-                            )
-                          })}
-                        </div>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                          className="flex items-center gap-1"
-                        >
-                          Next
-                          <ArrowRightIcon size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
