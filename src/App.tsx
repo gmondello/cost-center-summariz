@@ -620,23 +620,31 @@ function App() {
       const reportData = {
         generatedAt: new Date().toISOString(),
         summary: jsonData.summary,
-        costCenters: jsonData.costCenters.map(center => ({
-          ...center,
-          resourceCounts: getResourceCounts(center)
-        }))
+        costCenters: jsonData.costCenters.map(center => {
+          const { orgs, repos, members } = getResourceCounts(center)
+          return {
+            name: center.name,
+            id: center.id,
+            state: center.state,
+            totalResources: center.resources.length,
+            organizations: orgs,
+            repositories: repos,
+            members: members
+          }
+        })
       }
       
       const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.json`
+      a.download = `cost-center-summary-${new Date().toISOString().split('T')[0]}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      toast.success('JSON report exported successfully!')
+      toast.success('JSON summary exported successfully!')
     } else if (format === 'csv') {
       // Create CSV headers
       const headers = [
@@ -668,13 +676,13 @@ function App() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `cost-center-report-${new Date().toISOString().split('T')[0]}.csv`
+      a.download = `cost-center-summary-${new Date().toISOString().split('T')[0]}.csv`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      toast.success('CSV report exported successfully!')
+      toast.success('CSV summary exported successfully!')
     }
   }
 
@@ -982,7 +990,7 @@ function App() {
                   <DropdownMenuTrigger asChild>
                     <Button className="flex items-center gap-2">
                       <Download className="h-4 w-4" />
-                      Export Report
+                      Export Summary
                       <CaretDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
