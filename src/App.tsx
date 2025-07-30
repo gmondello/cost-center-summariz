@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown } from '@phosphor-icons/react'
+import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, ArrowSquareOut } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -599,6 +599,20 @@ function App() {
 
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
 
+  const getCostCenterGitHubUrl = (costCenterId: string) => {
+    if (!apiConfig?.enterprise) return null
+    
+    // For data-residency enterprises, use the custom base URL to construct the web URL
+    if (apiConfig.baseUrl) {
+      // Convert API URL to web URL (e.g., https://api.eu-central-1.ghe.com -> https://eu-central-1.ghe.com)
+      const webUrl = apiConfig.baseUrl.replace('api.', '').replace('/api', '')
+      return `${webUrl}/enterprises/${apiConfig.enterprise}/billing/cost_centers/${costCenterId}`
+    }
+    
+    // For standard GitHub.com enterprises
+    return `https://github.com/enterprises/${apiConfig.enterprise}/billing/cost_centers/${costCenterId}`
+  }
+
   const exportReport = (format: 'json' | 'csv') => {
     if (!jsonData) return
     
@@ -1120,7 +1134,21 @@ function App() {
                             >
                               <div className="flex items-center justify-between w-full">
                                 <div className="text-left">
-                                  <div className="font-medium text-lg">{center.name}</div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-medium text-lg">{center.name}</div>
+                                    {getCostCenterGitHubUrl(center.id) && (
+                                      <a
+                                        href={getCostCenterGitHubUrl(center.id)!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()} // Prevent expanding the collapsible
+                                        className="text-muted-foreground hover:text-primary transition-colors"
+                                        title="Open in GitHub"
+                                      >
+                                        <ArrowSquareOut className="h-4 w-4" />
+                                      </a>
+                                    )}
+                                  </div>
                                   <div className="font-mono text-sm text-muted-foreground">{center.id}</div>
                                 </div>
                                 <div className="flex items-center gap-6">
