@@ -617,22 +617,18 @@ function App() {
     if (!jsonData) return
     
     if (format === 'json') {
-      const reportData = {
-        generatedAt: new Date().toISOString(),
-        summary: jsonData.summary,
-        costCenters: jsonData.costCenters.map(center => {
-          const { orgs, repos, members } = getResourceCounts(center)
-          return {
-            name: center.name,
-            id: center.id,
-            state: center.state,
-            totalResources: center.resources.length,
-            organizations: orgs,
-            repositories: repos,
-            members: members
-          }
-        })
-      }
+      const reportData = jsonData.costCenters.map(center => {
+        const { orgs, repos, members } = getResourceCounts(center)
+        return {
+          name: center.name,
+          id: center.id,
+          state: center.state,
+          totalResources: center.resources.length,
+          organizations: orgs,
+          repositories: repos,
+          members: members
+        }
+      })
       
       const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
