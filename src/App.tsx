@@ -1157,6 +1157,7 @@ function App() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3">
+                                    {/* GitHub link - only show when we have API config */}
                                     {getCostCenterGitHubUrl(center.id) && (
                                       <a
                                         href={getCostCenterGitHubUrl(center.id)!}
@@ -1169,6 +1170,7 @@ function App() {
                                         <ArrowSquareOut className="h-4 w-4" />
                                       </a>
                                     )}
+                                    {/* Expand/collapse chevron */}
                                     {isExpanded ? (
                                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                     ) : (
