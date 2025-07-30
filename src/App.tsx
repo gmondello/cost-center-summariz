@@ -30,7 +30,10 @@ import {
   KeyIcon,
   GlobeIcon,
   TriangleDownIcon,
-  LinkExternalIcon
+  LinkExternalIcon,
+  ChevronLeftIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon
 } from '@primer/octicons-react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
@@ -87,6 +90,10 @@ function App() {
   const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
   const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 50
 
   const fetchFromAPI = async () => {
     if (!currentToken || !apiConfig?.enterprise) {
@@ -610,12 +617,31 @@ function App() {
     return filtered
   }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedCostCenters.length / ITEMS_PER_PAGE)
+  const paginatedCostCenters = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    return filteredAndSortedCostCenters.slice(startIndex, endIndex)
+  }, [filteredAndSortedCostCenters, currentPage])
+
+  // Reset to page 1 when filters change
+  const resetPagination = () => {
+    setCurrentPage(1)
+  }
+
+  // Update pagination when search/filter changes
+  useMemo(() => {
+    resetPagination()
+  }, [searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
+
   const clearFilters = () => {
     setSearchQuery('')
     setResourceTypeFilter('all')
     setHasResourcesFilter('all')
     setStateFilter('active')
     setSortBy('name')
+    setCurrentPage(1) // Reset to first page when clearing filters
   }
 
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
@@ -1058,6 +1084,11 @@ function App() {
                         jsonData.costCenters.length
                       } cost centers
                       {hasActiveFilters && ' (filtered)'}
+                      {filteredAndSortedCostCenters.length > ITEMS_PER_PAGE && (
+                        <span className="ml-1">
+                          · Page {currentPage} of {totalPages}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
@@ -1144,7 +1175,7 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredAndSortedCostCenters.map((center) => {
+                  {paginatedCostCenters.map((center) => {
                     const { orgs, repos, members } = getResourceCounts(center)
                     const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
                     const isExpanded = expandedCenters.has(center.id)
@@ -1292,6 +1323,65 @@ function App() {
                   ) === 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">
                       No {stateFilter === 'active' ? 'active' : stateFilter === 'deleted' ? 'deleted' : ''} cost centers found
+                    </div>
+                  )}
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedCostCenters.length)} of {filteredAndSortedCostCenters.length} cost centers
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-1"
+                        >
+                          <ArrowLeftIcon size={16} />
+                          Previous
+                        </Button>
+                        
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                            let pageNum
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNum)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center gap-1"
+                        >
+                          Next
+                          <ArrowRightIcon size={16} />
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
