@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -30,7 +30,8 @@ import {
   KeyIcon,
   GlobeIcon,
   TriangleDownIcon,
-  LinkExternalIcon
+  LinkExternalIcon,
+  ChevronLeftIcon
 } from '@primer/octicons-react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
@@ -87,6 +88,10 @@ function App() {
   const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
   const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   const fetchFromAPI = async () => {
     if (!currentToken || !apiConfig?.enterprise) {
@@ -610,13 +615,28 @@ function App() {
     return filtered
   }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
+  // Paginated results
+  const paginatedCostCenters = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredAndSortedCostCenters.slice(startIndex, endIndex)
+  }, [filteredAndSortedCostCenters, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(filteredAndSortedCostCenters.length / itemsPerPage)
+
   const clearFilters = () => {
     setSearchQuery('')
     setResourceTypeFilter('all')
     setHasResourcesFilter('all')
     setStateFilter('active')
     setSortBy('name')
+    setCurrentPage(1) // Reset to first page when clearing filters
   }
+
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
 
@@ -1058,6 +1078,11 @@ function App() {
                         jsonData.costCenters.length
                       } cost centers
                       {hasActiveFilters && ' (filtered)'}
+                      {totalPages > 1 && (
+                        <span className="ml-2">
+                          • Page {currentPage} of {totalPages}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
@@ -1144,7 +1169,7 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredAndSortedCostCenters.map((center) => {
+                  {paginatedCostCenters.map((center) => {
                     const { orgs, repos, members } = getResourceCounts(center)
                     const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
                     const isExpanded = expandedCenters.has(center.id)
@@ -1269,7 +1294,64 @@ function App() {
                     )
                   })}
                   
-                  {filteredAndSortedCostCenters.length === 0 && (
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && paginatedCostCenters.length > 0 && (
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedCostCenters.length)} of {filteredAndSortedCostCenters.length} cost centers
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-1"
+                        >
+                          <ChevronLeftIcon size={16} />
+                          Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                            let pageNum: number
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNum)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center gap-1"
+                        >
+                          Next
+                          <ChevronRightIcon size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {paginatedCostCenters.length === 0 && filteredAndSortedCostCenters.length === 0 && (
                     stateFilter === 'active' ? jsonData.activeCostCenters.length :
                     stateFilter === 'deleted' ? jsonData.deletedCostCenters.length :
                     jsonData.costCenters.length
