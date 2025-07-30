@@ -26,7 +26,7 @@ import {
   FilterIcon,
   XIcon,
   DatabaseIcon,
-  CloudDownloadIcon,
+  CloudIcon,
   KeyIcon,
   GlobeIcon,
   TriangleDownIcon,
@@ -763,7 +763,7 @@ function App() {
                 <Tabs defaultValue="api" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="api" className="flex items-center gap-2">
-                      <CloudDownloadIcon size={16} />
+                      <CloudIcon size={16} />
                       GitHub API
                     </TabsTrigger>
                     <TabsTrigger value="file" className="flex items-center gap-2">
@@ -849,7 +849,7 @@ function App() {
                             disabled={isLoading}
                             className="flex items-center gap-2"
                           >
-                            <CloudDownloadIcon size={16} />
+                            <CloudIcon size={16} />
                             {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
                           </Button>
                           
