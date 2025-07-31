@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -72,9 +72,13 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   
-  // API Configuration - persisted in KV store (no token stored)
-  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
+  // User-specific API Configuration - persisted in KV store per user (no token stored)
+  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>(
+    currentUser ? `github-api-config-${currentUser.id}` : 'github-api-config-temp', 
+    null
+  )
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
@@ -82,12 +86,41 @@ function App() {
   // Token stored only in memory (not persisted)
   const [currentToken, setCurrentToken] = useState('')
   
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('')
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'Org' | 'Repo' | 'User'>('all')
-  const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
-  const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
-  const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
+  // Get current user on component mount
+  useEffect(() => {
+    const getUserInfo = async () => {
+      try {
+        const user = await spark.user()
+        setCurrentUser(user)
+      } catch (err) {
+        console.error('Failed to get user info:', err)
+        // Continue without user info - will use temp key
+      }
+    }
+    getUserInfo()
+  }, [])
+  
+  // Search and filter state - user-specific persistence
+  const [searchQuery, setSearchQuery] = useKV(
+    currentUser ? `search-query-${currentUser.id}` : 'search-query-temp', 
+    ''
+  )
+  const [resourceTypeFilter, setResourceTypeFilter] = useKV<'all' | 'Org' | 'Repo' | 'User'>(
+    currentUser ? `resource-type-filter-${currentUser.id}` : 'resource-type-filter-temp', 
+    'all'
+  )
+  const [hasResourcesFilter, setHasResourcesFilter] = useKV<'all' | 'with-resources' | 'empty'>(
+    currentUser ? `has-resources-filter-${currentUser.id}` : 'has-resources-filter-temp', 
+    'all'
+  )
+  const [stateFilter, setStateFilter] = useKV<'active' | 'deleted' | 'all'>(
+    currentUser ? `state-filter-${currentUser.id}` : 'state-filter-temp', 
+    'active'
+  )
+  const [sortBy, setSortBy] = useKV<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>(
+    currentUser ? `sort-by-${currentUser.id}` : 'sort-by-temp', 
+    'name'
+  )
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -219,6 +252,7 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setCurrentToken('') // Also clear the in-memory token
     setError('') // Clear any error messages
     toast.success('API configuration cleared')
   }
@@ -625,11 +659,11 @@ function App() {
   const totalPages = Math.ceil(filteredAndSortedCostCenters.length / itemsPerPage)
 
   const clearFilters = () => {
-    setSearchQuery('')
-    setResourceTypeFilter('all')
-    setHasResourcesFilter('all')
-    setStateFilter('active')
-    setSortBy('name')
+    setSearchQuery(() => '')
+    setResourceTypeFilter(() => 'all')
+    setHasResourcesFilter(() => 'all')
+    setStateFilter(() => 'active')
+    setSortBy(() => 'name')
     setCurrentPage(1) // Reset to first page when clearing filters
   }
 
@@ -1096,7 +1130,7 @@ function App() {
                       <Input
                         placeholder="Search cost centers, IDs, or resource names..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(() => e.target.value)}
                         className="pl-10"
                       />
                     </div>
@@ -1112,7 +1146,7 @@ function App() {
                   
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* State Filter */}
-                    <Select value={stateFilter} onValueChange={(value: any) => setStateFilter(value)}>
+                    <Select value={stateFilter} onValueChange={(value: any) => setStateFilter(() => value)}>
                       <SelectTrigger className="w-40">
                         <SelectValue placeholder="State" />
                       </SelectTrigger>
@@ -1126,7 +1160,7 @@ function App() {
                     {/* Resource Type Filter */}
                     <div className="flex items-center gap-2">
                       <FilterIcon size={16} className="text-muted-foreground" />
-                      <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(value)}>
+                      <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(() => value)}>
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Resource Type" />
                         </SelectTrigger>
@@ -1140,7 +1174,7 @@ function App() {
                     </div>
                     
                     {/* Has Resources Filter */}
-                    <Select value={hasResourcesFilter} onValueChange={(value: any) => setHasResourcesFilter(value)}>
+                    <Select value={hasResourcesFilter} onValueChange={(value: any) => setHasResourcesFilter(() => value)}>
                       <SelectTrigger className="w-40">
                         <SelectValue placeholder="Resource Status" />
                       </SelectTrigger>
@@ -1152,7 +1186,7 @@ function App() {
                     </Select>
                     
                     {/* Sort By */}
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(() => value)}>
                       <SelectTrigger className="w-44">
                         <SelectValue placeholder="Sort By" />
                       </SelectTrigger>
