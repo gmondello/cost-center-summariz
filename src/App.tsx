@@ -731,7 +731,7 @@ function App() {
                 </TooltipTrigger>
                 <TooltipContent className="bg-background border border-border shadow-sm text-foreground max-w-72" sideOffset={5}>
                   <p className="text-sm">
-                    This prototype is a standalone utility and is not covered by GitHub's terms and conditions. Use at your own risk.
+                    This Spark app is an open source utility.
                   </p>
                 </TooltipContent>
               </Tooltip>
