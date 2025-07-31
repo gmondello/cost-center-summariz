@@ -1,16 +1,37 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, ArrowSquareOut } from '@phosphor-icons/react'
+// Phosphor Icons
+import { 
+  UploadSimple as UploadIcon,
+  File as FileIcon,
+  Download as DownloadIcon,
+  Warning as AlertIcon,
+  CheckCircle as CheckCircleIcon,
+  CaretDown as ChevronDownIcon,
+  CaretRight as ChevronRightIcon,
+  Users as OrganizationIcon,
+  GitBranch as RepoIcon,
+  User as PersonIcon,
+  MagnifyingGlass as SearchIcon,
+  FunnelSimple as FilterIcon,
+  X as XIcon,
+  Database as DatabaseIcon,
+  Cloud as CloudIcon,
+  Key as KeyIcon,
+  Globe as GlobeIcon,
+  CaretDown as TriangleDownIcon,
+  ArrowSquareOut as LinkExternalIcon,
+  CaretLeft as ChevronLeftIcon
+} from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
 
@@ -50,9 +71,13 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   
-  // API Configuration - persisted in KV store (no token stored)
-  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
+  // User-specific API Configuration - persisted in KV store per user (no token stored)
+  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>(
+    currentUser ? `github-api-config-${currentUser.id}` : 'github-api-config-temp', 
+    null
+  )
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
@@ -60,12 +85,45 @@ function App() {
   // Token stored only in memory (not persisted)
   const [currentToken, setCurrentToken] = useState('')
   
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('')
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'Org' | 'Repo' | 'User'>('all')
-  const [hasResourcesFilter, setHasResourcesFilter] = useState<'all' | 'with-resources' | 'empty'>('all')
-  const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
-  const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
+  // Get current user on component mount
+  useEffect(() => {
+    const getUserInfo = async () => {
+      try {
+        const user = await spark.user()
+        setCurrentUser(user)
+      } catch (err) {
+        console.error('Failed to get user info:', err)
+        // Continue without user info - will use temp key
+      }
+    }
+    getUserInfo()
+  }, [])
+  
+  // Search and filter state - user-specific persistence
+  const [searchQuery, setSearchQuery] = useKV(
+    currentUser ? `search-query-${currentUser.id}` : 'search-query-temp', 
+    ''
+  )
+  const [resourceTypeFilter, setResourceTypeFilter] = useKV<'all' | 'Org' | 'Repo' | 'User'>(
+    currentUser ? `resource-type-filter-${currentUser.id}` : 'resource-type-filter-temp', 
+    'all'
+  )
+  const [hasResourcesFilter, setHasResourcesFilter] = useKV<'all' | 'with-resources' | 'empty'>(
+    currentUser ? `has-resources-filter-${currentUser.id}` : 'has-resources-filter-temp', 
+    'all'
+  )
+  const [stateFilter, setStateFilter] = useKV<'active' | 'deleted' | 'all'>(
+    currentUser ? `state-filter-${currentUser.id}` : 'state-filter-temp', 
+    'active'
+  )
+  const [sortBy, setSortBy] = useKV<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>(
+    currentUser ? `sort-by-${currentUser.id}` : 'sort-by-temp', 
+    'name'
+  )
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   const fetchFromAPI = async () => {
     if (!currentToken || !apiConfig?.enterprise) {
@@ -193,6 +251,7 @@ function App() {
     setTempToken('')
     setTempEnterprise('')
     setTempBaseUrl('')
+    setCurrentToken('') // Also clear the in-memory token
     setError('') // Clear any error messages
     toast.success('API configuration cleared')
   }
@@ -589,13 +648,28 @@ function App() {
     return filtered
   }, [jsonData, searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
+  // Paginated results
+  const paginatedCostCenters = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredAndSortedCostCenters.slice(startIndex, endIndex)
+  }, [filteredAndSortedCostCenters, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(filteredAndSortedCostCenters.length / itemsPerPage)
+
   const clearFilters = () => {
-    setSearchQuery('')
-    setResourceTypeFilter('all')
-    setHasResourcesFilter('all')
-    setStateFilter('active')
-    setSortBy('name')
+    setSearchQuery(() => '')
+    setResourceTypeFilter(() => 'all')
+    setHasResourcesFilter(() => 'all')
+    setStateFilter(() => 'active')
+    setSortBy(() => 'name')
+    setCurrentPage(1) // Reset to first page when clearing filters
   }
+
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, resourceTypeFilter, hasResourcesFilter, stateFilter, sortBy])
 
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
 
@@ -690,12 +764,12 @@ function App() {
           <div className="mb-8">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Cost Center Analyzer</h1>
-                <p className="text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
+                <h1 className="text-4xl font-semibold text-foreground mb-2">Cost Center Analyzer</h1>
+                <p className="text-base text-muted-foreground">Fetch data via GitHub API directly or upload JSON response to search cost centers and members and generate reports</p>
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 font-medium">
+                  <Badge variant="outline" className="border-amber-400 text-amber-800 bg-amber-50 font-medium px-3 py-1">
                     Prototype
                   </Badge>
                 </TooltipTrigger>
@@ -714,7 +788,7 @@ function App() {
             <>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
+                  <UploadIcon size={20} />
                   Load Cost Center Data
                 </CardTitle>
                 <CardDescription>
@@ -722,9 +796,9 @@ function App() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-6 flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+                <div className="mb-6 flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
                   <div>
-                    <p className="text-sm text-muted-foreground">Don't have cost center data yet?</p>
+                    <p className="text-sm font-medium text-muted-foreground">Don't have cost center data yet?</p>
                     <p className="text-xs text-muted-foreground mt-1">Try the application with sample data to explore features</p>
                   </div>
                   <Button 
@@ -734,7 +808,7 @@ function App() {
                     className="flex items-center gap-2 text-xs"
                     disabled={isLoading}
                   >
-                    <Database className="h-4 w-4" />
+                    <DatabaseIcon size={16} />
                     Load Example Data
                   </Button>
                 </div>
@@ -742,11 +816,11 @@ function App() {
                 <Tabs defaultValue="api" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="api" className="flex items-center gap-2">
-                      <CloudArrowDown className="h-4 w-4" />
+                      <CloudIcon size={16} />
                       GitHub API
                     </TabsTrigger>
                     <TabsTrigger value="file" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
+                      <FileIcon size={16} />
                       Upload File
                     </TabsTrigger>
                   </TabsList>
@@ -765,9 +839,9 @@ function App() {
                               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                               value={tempToken}
                               onChange={(e) => setTempToken(e.target.value)}
-                              className="font-mono"
+                              className="font-mono text-sm"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-2">
                               Required scopes: manage_billing:enterprise
                             </p>
                           </div>
@@ -782,7 +856,7 @@ function App() {
                                 value={tempEnterprise}
                                 onChange={(e) => setTempEnterprise(e.target.value)}
                               />
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 Found in your enterprise URL
                               </p>
                             </div>
@@ -796,7 +870,7 @@ function App() {
                                 value={tempBaseUrl}
                                 onChange={(e) => setTempBaseUrl(e.target.value)}
                               />
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-2">
                                 For data residency enterprises only. 
                               </p>
                             </div>
@@ -804,14 +878,14 @@ function App() {
                         </div>
                         
                         <Button onClick={saveAPIConfigAndFetch} disabled={isLoading} className="flex items-center gap-2">
-                          <Key className="h-4 w-4" />
+                          <KeyIcon size={16} />
                           {isLoading ? 'Saving & Fetching...' : 'Save Configuration & Fetch Data'}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <Alert>
-                          <CheckCircle className="h-4 w-4" />
+                          <CheckCircleIcon size={16} />
                           <AlertDescription>
                             API configured for enterprise: <code className="font-mono">{apiConfig.enterprise}</code>
                             {apiConfig.baseUrl && (
@@ -828,7 +902,7 @@ function App() {
                             disabled={isLoading}
                             className="flex items-center gap-2"
                           >
-                            <CloudArrowDown className="h-4 w-4" />
+                            <CloudIcon size={16} />
                             {isLoading ? 'Fetching...' : 'Fetch from GitHub API'}
                           </Button>
                           
@@ -855,7 +929,7 @@ function App() {
                         onClick={() => document.getElementById('file-upload')?.click()}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <FileText className={`w-8 h-8 mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <FileIcon size={32} className={`mb-3 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`} />
                           <p className="mb-2 text-sm text-muted-foreground">
                             <span className="font-semibold">Click to upload</span> or drag and drop
                           </p>
@@ -876,7 +950,7 @@ function App() {
                 
                 {error && (
                   <Alert variant="destructive" className="mt-4">
-                    <AlertCircle className="h-4 w-4" />
+                    <AlertIcon size={16} />
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
@@ -887,7 +961,7 @@ function App() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircleIcon size={20} className="text-green-500" />
                     <CardTitle className="text-lg">Data Loaded Successfully</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
@@ -900,7 +974,7 @@ function App() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Upload className="h-4 w-4" />
+                      <UploadIcon size={16} />
                       Load New Data
                     </Button>
                   </div>
@@ -929,46 +1003,46 @@ function App() {
         {jsonData && (
           <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-l-4 border-l-primary">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Cost Centers</p>
-                      <p className="text-2xl font-bold text-primary">{jsonData.summary.totalActive}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Active Cost Centers</p>
+                      <p className="text-3xl font-semibold text-primary">{jsonData.summary.totalActive}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-muted-foreground">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Deleted Cost Centers</p>
-                      <p className="text-2xl font-bold text-muted-foreground">{jsonData.summary.totalDeleted}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Deleted Cost Centers</p>
+                      <p className="text-3xl font-semibold text-muted-foreground">{jsonData.summary.totalDeleted}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-accent">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Organizations</p>
-                      <p className="text-2xl font-bold">{formatNumber(jsonData.summary.totalOrganizations)}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Total Organizations</p>
+                      <p className="text-3xl font-semibold text-accent">{formatNumber(jsonData.summary.totalOrganizations)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-l-4 border-l-foreground">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Repositories</p>
-                      <p className="text-2xl font-bold">{formatNumber(jsonData.summary.totalRepositories)}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Total Repositories</p>
+                      <p className="text-3xl font-semibold text-foreground">{formatNumber(jsonData.summary.totalRepositories)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -985,36 +1059,36 @@ function App() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button className="flex items-center gap-2">
-                      <Download className="h-4 w-4" />
+                      <DownloadIcon size={16} />
                       Export Summary
-                      <CaretDown className="h-4 w-4" />
+                      <TriangleDownIcon size={16} />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => exportReport('json')}>
-                      <FileText className="h-4 w-4 mr-2" />
+                      <FileIcon size={16} className="mr-2" />
                       Export as JSON
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => exportReport('csv')}>
-                      <Download className="h-4 w-4 mr-2" />
+                      <DownloadIcon size={16} className="mr-2" />
                       Export as CSV
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary">{formatNumber(jsonData.summary.totalOrganizations)}</div>
-                    <div className="text-sm text-muted-foreground">Organizations</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="text-center p-6 rounded-lg bg-primary/5">
+                    <div className="text-4xl font-semibold text-primary mb-2">{formatNumber(jsonData.summary.totalOrganizations)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Organizations</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-accent">{formatNumber(jsonData.summary.totalRepositories)}</div>
-                    <div className="text-sm text-muted-foreground">Repositories</div>
+                  <div className="text-center p-6 rounded-lg bg-accent/5">
+                    <div className="text-4xl font-semibold text-accent mb-2">{formatNumber(jsonData.summary.totalRepositories)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Repositories</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">{formatNumber(jsonData.summary.totalMembers)}</div>
-                    <div className="text-sm text-muted-foreground">Members</div>
+                  <div className="text-center p-6 rounded-lg bg-foreground/5">
+                    <div className="text-4xl font-semibold text-foreground mb-2">{formatNumber(jsonData.summary.totalMembers)}</div>
+                    <div className="text-sm font-medium text-muted-foreground">Members</div>
                   </div>
                 </div>
               </CardContent>
@@ -1037,6 +1111,11 @@ function App() {
                         jsonData.costCenters.length
                       } cost centers
                       {hasActiveFilters && ' (filtered)'}
+                      {totalPages > 1 && (
+                        <span className="ml-2">
+                          • Page {currentPage} of {totalPages}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
@@ -1046,11 +1125,11 @@ function App() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Search Input */}
                     <div className="relative flex-1">
-                      <MagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <SearchIcon size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                       <Input
                         placeholder="Search cost centers, IDs, or resource names..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(() => e.target.value)}
                         className="pl-10"
                       />
                     </div>
@@ -1058,7 +1137,7 @@ function App() {
                     {/* Clear Filters Button */}
                     {hasActiveFilters && (
                       <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
-                        <X className="h-4 w-4" />
+                        <XIcon size={16} />
                         Clear Filters
                       </Button>
                     )}
@@ -1066,7 +1145,7 @@ function App() {
                   
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* State Filter */}
-                    <Select value={stateFilter} onValueChange={(value: any) => setStateFilter(value)}>
+                    <Select value={stateFilter} onValueChange={(value: any) => setStateFilter(() => value)}>
                       <SelectTrigger className="w-40">
                         <SelectValue placeholder="State" />
                       </SelectTrigger>
@@ -1079,8 +1158,8 @@ function App() {
                     
                     {/* Resource Type Filter */}
                     <div className="flex items-center gap-2">
-                      <FunnelSimple className="h-4 w-4 text-muted-foreground" />
-                      <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(value)}>
+                      <FilterIcon size={16} className="text-muted-foreground" />
+                      <Select value={resourceTypeFilter} onValueChange={(value: any) => setResourceTypeFilter(() => value)}>
                         <SelectTrigger className="w-40">
                           <SelectValue placeholder="Resource Type" />
                         </SelectTrigger>
@@ -1094,7 +1173,7 @@ function App() {
                     </div>
                     
                     {/* Has Resources Filter */}
-                    <Select value={hasResourcesFilter} onValueChange={(value: any) => setHasResourcesFilter(value)}>
+                    <Select value={hasResourcesFilter} onValueChange={(value: any) => setHasResourcesFilter(() => value)}>
                       <SelectTrigger className="w-40">
                         <SelectValue placeholder="Resource Status" />
                       </SelectTrigger>
@@ -1106,7 +1185,7 @@ function App() {
                     </Select>
                     
                     {/* Sort By */}
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(() => value)}>
                       <SelectTrigger className="w-44">
                         <SelectValue placeholder="Sort By" />
                       </SelectTrigger>
@@ -1123,7 +1202,7 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredAndSortedCostCenters.map((center) => {
+                  {paginatedCostCenters.map((center) => {
                     const { orgs, repos, members } = getResourceCounts(center)
                     const { orgs: orgList, repos: repoList, users: userList } = getResourcesByType(center)
                     const isExpanded = expandedCenters.has(center.id)
@@ -1144,19 +1223,20 @@ function App() {
                                 <div className="flex items-center gap-6">
                                   <div className="flex gap-4 text-sm">
                                     <span className="flex items-center gap-1">
-                                      <Buildings className="h-4 w-4 text-primary" />
+                                      <OrganizationIcon size={16} className="text-primary" />
                                       {formatNumber(orgs)} Orgs
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <GitBranch className="h-4 w-4 text-accent" />
+                                      <RepoIcon size={16} className="text-accent" />
                                       {formatNumber(repos)} Repos
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <User className="h-4 w-4 text-foreground" />
+                                      <PersonIcon size={16} className="text-foreground" />
                                       {formatNumber(members)} Members
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3">
+                                    {/* GitHub link - only show when we have API config */}
                                     {getCostCenterGitHubUrl(center.id) && (
                                       <a
                                         href={getCostCenterGitHubUrl(center.id)!}
@@ -1166,13 +1246,14 @@ function App() {
                                         className="text-muted-foreground hover:text-primary transition-colors"
                                         title="Open in GitHub"
                                       >
-                                        <ArrowSquareOut className="h-4 w-4" />
+                                        <LinkExternalIcon size={16} />
                                       </a>
                                     )}
+                                    {/* Expand/collapse chevron */}
                                     {isExpanded ? (
-                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                      <ChevronDownIcon size={16} className="text-muted-foreground" />
                                     ) : (
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                      <ChevronRightIcon size={16} className="text-muted-foreground" />
                                     )}
                                   </div>
                                 </div>
@@ -1186,7 +1267,7 @@ function App() {
                               {orgList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <Buildings className="h-4 w-4 text-primary" />
+                                    <OrganizationIcon size={16} className="text-primary" />
                                     Organizations ({orgList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1203,7 +1284,7 @@ function App() {
                               {repoList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <GitBranch className="h-4 w-4 text-accent" />
+                                    <RepoIcon size={16} className="text-accent" />
                                     Repositories ({repoList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1220,7 +1301,7 @@ function App() {
                               {userList.length > 0 && (
                                 <div>
                                   <h4 className="flex items-center gap-2 font-medium text-sm text-muted-foreground mb-2">
-                                    <User className="h-4 w-4 text-foreground" />
+                                    <PersonIcon size={16} className="text-foreground" />
                                     Members ({userList.length})
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
@@ -1246,14 +1327,71 @@ function App() {
                     )
                   })}
                   
-                  {filteredAndSortedCostCenters.length === 0 && (
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && paginatedCostCenters.length > 0 && (
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedCostCenters.length)} of {filteredAndSortedCostCenters.length} cost centers
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-1"
+                        >
+                          <ChevronLeftIcon size={16} />
+                          Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                            let pageNum: number
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNum)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="flex items-center gap-1"
+                        >
+                          Next
+                          <ChevronRightIcon size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {paginatedCostCenters.length === 0 && filteredAndSortedCostCenters.length === 0 && (
                     stateFilter === 'active' ? jsonData.activeCostCenters.length :
                     stateFilter === 'deleted' ? jsonData.deletedCostCenters.length :
                     jsonData.costCenters.length
                   ) > 0 && (
                     <div className="text-center text-muted-foreground py-8 border rounded-lg">
                       <div className="space-y-2">
-                        <MagnifyingGlass className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                        <SearchIcon size={32} className="mx-auto text-muted-foreground/50" />
                         <p>No cost centers match your current filters</p>
                         <Button variant="outline" onClick={clearFilters} className="mt-2">
                           Clear Filters
@@ -1271,6 +1409,7 @@ function App() {
                       No {stateFilter === 'active' ? 'active' : stateFilter === 'deleted' ? 'deleted' : ''} cost centers found
                     </div>
                   )}
+
                 </div>
               </CardContent>
             </Card>
@@ -1283,7 +1422,7 @@ function App() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
+                  <GlobeIcon size={20} />
                   GitHub API Setup Guide
                 </CardTitle>
               </CardHeader>
@@ -1348,7 +1487,7 @@ function App() {
                 </div>
                 
                 <Alert>
-                  <Key className="h-4 w-4" />
+                  <KeyIcon size={16} />
                   <AlertDescription>
                     Your token and enterprise configuration are securely stored locally and never shared.
                   </AlertDescription>
@@ -1359,7 +1498,7 @@ function App() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
+                  <CheckCircleIcon size={20} />
                   Expected JSON Format
                 </CardTitle>
               </CardHeader>

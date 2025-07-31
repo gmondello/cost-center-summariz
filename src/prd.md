@@ -65,28 +65,28 @@
 - **Simplicity Spectrum**: Minimal interface that prioritizes data clarity
 
 ### Color Strategy
-- **Color Scheme Type**: Professional monochromatic with strategic accent colors
-- **Primary Color**: Deep blue (#1e40af) - conveys trust and stability
-- **Secondary Colors**: Light grays and whites for backgrounds and structure
-- **Accent Color**: Emerald green (#059669) for positive metrics and success states
-- **Color Psychology**: Blue builds trust for financial data, green indicates positive outcomes
-- **Color Accessibility**: High contrast ratios ensure readability across all elements
+- **Color Scheme Type**: GitHub Primer design system colors for familiarity and trust
+- **Primary Color**: GitHub blue (#0969da) - builds trust and maintains brand consistency
+- **Secondary Colors**: Primer neutral grays (#f6f8fa, #d1d9e0) for backgrounds and structure
+- **Accent Color**: GitHub success green (#1a7f37) for positive metrics and active states
+- **Color Psychology**: Blue builds trust for financial data, green indicates active/positive states
+- **Color Accessibility**: High contrast ratios ensure WCAG AA compliance
 - **Foreground/Background Pairings**:
-  - Background (white): Dark gray text (#374151)
-  - Card (light gray): Dark gray text (#374151)
-  - Primary (blue): White text
-  - Secondary (gray): Dark gray text
-  - Accent (green): White text
-  - Muted (light gray): Medium gray text (#6b7280)
+  - Background (white #ffffff): Dark text (#1f2328)
+  - Card (white): Dark text (#1f2328)
+  - Primary (GitHub blue #0969da): White text
+  - Secondary (light gray #f6f8fa): Dark text (#24292f)
+  - Accent (green #1a7f37): White text
+  - Muted (light gray #f6f8fa): Medium gray text (#656d76)
 
 ### Typography System
-- **Font Pairing Strategy**: Single professional sans-serif for consistency
-- **Typographic Hierarchy**: Clear size relationships from large headings to small data labels
-- **Font Personality**: Clean, readable, business-appropriate
-- **Readability Focus**: Generous line spacing, appropriate contrast, comfortable reading sizes
-- **Typography Consistency**: Consistent weights and sizes across similar elements
-- **Which fonts**: Inter (clean, professional, excellent readability)
-- **Legibility Check**: Inter is specifically designed for digital readability
+- **Font Pairing Strategy**: GitHub system font stack for native feel and optimal performance
+- **Typographic Hierarchy**: Clear size relationships following GitHub's scale (32px, 24px, 16px, 14px, 12px)
+- **Font Personality**: Clean, readable, familiar system fonts that feel native
+- **Readability Focus**: GitHub-optimized line spacing and sizes for developer/business user comfort
+- **Typography Consistency**: Consistent weights (regular, medium, semibold) across similar elements
+- **Which fonts**: System font stack (-apple-system, BlinkMacSystemFont, 'Segoe UI', etc.)
+- **Legibility Check**: System fonts are optimized for each platform's display characteristics
 
 ### Visual Hierarchy & Layout
 - **Attention Direction**: Upload area prominent, then results flow naturally down the page
@@ -104,16 +104,16 @@
 - **Component Usage**: Cards for sections, Collapsible components for resource details, Input for search, Select dropdowns for filtering, Buttons for actions, Badges for resource names, Upload area for file input
 - **Component Customization**: Rounded corners for approachability, consistent spacing, color-coded badges for different resource types, search icons and filter indicators
 - **Component States**: Clear hover, active, and disabled states for all interactive elements, smooth expansion animations, focus states for search inputs
-- **Icon Selection**: Upload, download, checkmark, chevron arrows, magnifying glass for search, funnel for filters, X for clearing, and resource type icons (buildings, git branches, users)
+- **Icon Selection**: GitHub Octicons for familiarity - upload, download, check-circle, chevrons, organization, repo, person icons for search, filter, and resource type indicators
 - **Component Hierarchy**: Primary upload button, search and filter controls, secondary action buttons, expandable detail sections, tertiary utility controls
-- **Spacing System**: Consistent padding using Tailwind's 4, 6, 8, 12 spacing scale
-- **Mobile Adaptation**: Stack filter controls vertically, maintain touch-friendly button sizes, responsive badge wrapping, collapsible filter sections
+- **Spacing System**: GitHub's 8px grid system using consistent 8, 16, 24, 32px spacing
+- **Mobile Adaptation**: Stack filter controls vertically, maintain 44px touch targets, responsive badge wrapping, collapsible filter sections
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based design with reusable patterns
-- **Style Guide Elements**: Color usage, typography scale, spacing, component variants
-- **Visual Rhythm**: Consistent card layouts and spacing create predictable patterns
-- **Brand Alignment**: Professional appearance appropriate for financial software
+- **Design System Approach**: GitHub Primer design system for consistency with GitHub's interface
+- **Style Guide Elements**: Primer color tokens, typography scale, spacing, Octicon usage
+- **Visual Rhythm**: Consistent card layouts and 8px grid spacing create predictable patterns
+- **Brand Alignment**: GitHub-native appearance for familiarity and trust in enterprise context
 
 ### Accessibility & Readability
 - **Contrast Goal**: WCAG AA compliance minimum for all text and interactive elements
