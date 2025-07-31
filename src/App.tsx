@@ -1412,6 +1412,13 @@ function App() {
             </Card>
           </div>
         )}
+        
+        {/* Footer */}
+        <footer className="mt-12 py-6 border-t border-border">
+          <div className="text-center text-sm text-muted-foreground">
+            Made with GitHub Spark
+          </div>
+        </footer>
       </div>
     </div>
     </TooltipProvider>
