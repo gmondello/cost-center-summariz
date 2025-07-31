@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -13,6 +13,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Upload, FileText, Download, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Buildings, GitBranch, User, MagnifyingGlass, FunnelSimple, X, Database, CloudArrowDown, Key, Globe, CaretDown, ArrowSquareOut } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
+
+interface UserInfo {
+  avatarUrl: string
+  email: string
+  id: string
+  isOwner: boolean
+  login: string
+}
 
 interface Resource {
   type: 'Org' | 'Repo' | 'User'
@@ -50,9 +58,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null)
   
-  // API Configuration - persisted in KV store (no token stored)
-  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>('github-api-config', null)
+  // User-specific API Configuration - persisted in KV store (no token stored)
+  const userSpecificKey = currentUser ? `github-api-config-${currentUser.id}` : 'github-api-config-temp'
+  const [apiConfig, setApiConfig] = useKV<GitHubAPIConfig | null>(userSpecificKey, null)
   const [tempToken, setTempToken] = useState('')
   const [tempEnterprise, setTempEnterprise] = useState('')
   const [tempBaseUrl, setTempBaseUrl] = useState('')
@@ -67,8 +77,22 @@ function App() {
   const [stateFilter, setStateFilter] = useState<'active' | 'deleted' | 'all'>('active')
   const [sortBy, setSortBy] = useState<'name' | 'total-resources' | 'orgs' | 'repos' | 'users'>('name')
 
+  // Fetch current user on component mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await spark.user()
+        setCurrentUser(user)
+      } catch (err) {
+        console.error('Failed to fetch user information:', err)
+        // Continue with anonymous session
+      }
+    }
+    fetchUser()
+  }, [])
+
   const fetchFromAPI = async () => {
-    if (!currentToken || !apiConfig?.enterprise) {
+    if (!currentUser || !currentToken || !apiConfig?.enterprise) {
       setError('Please configure your GitHub API token and enterprise slug first')
       toast.error('API configuration required')
       return
@@ -116,6 +140,12 @@ function App() {
   }
 
   const saveAPIConfigAndFetch = async () => {
+    if (!currentUser) {
+      setError('User information is not available. Please refresh the page.')
+      toast.error('User information required')
+      return
+    }
+    
     if (!tempToken.trim()) {
       setError('GitHub Personal Access Token is required')
       toast.error('Please enter your GitHub token')
@@ -600,7 +630,7 @@ function App() {
   const hasActiveFilters = searchQuery || resourceTypeFilter !== 'all' || hasResourcesFilter !== 'all' || stateFilter !== 'active' || sortBy !== 'name'
 
   const getCostCenterGitHubUrl = (costCenterId: string) => {
-    if (!apiConfig?.enterprise) return null
+    if (!currentUser || !apiConfig?.enterprise) return null
     
     // For data-residency enterprises, use the custom base URL to construct the web URL
     if (apiConfig.baseUrl) {
@@ -753,7 +783,16 @@ function App() {
 
                   {/* GitHub API Tab */}
                   <TabsContent value="api" className="space-y-4">
-                    {!apiConfig ? (
+                    {!currentUser ? (
+                      <div className="space-y-4">
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Loading user information...
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    ) : !apiConfig ? (
                       <div className="space-y-4">
                         <div className="space-y-4">
                           <div>
@@ -909,7 +948,7 @@ function App() {
               <CardContent className="pt-0">
                 <p className="text-sm text-muted-foreground">
                   Found {jsonData.activeCostCenters.length} active and {jsonData.deletedCostCenters.length} deleted cost centers. 
-                  {apiConfig && (
+                  {currentUser && apiConfig && (
                     <span className="ml-1">
                       Loaded from GitHub API for enterprise: <code className="font-mono text-xs">{apiConfig.enterprise}</code>
                       {apiConfig.baseUrl && (
